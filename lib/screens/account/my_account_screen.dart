@@ -8,17 +8,35 @@ import '../../models/account_model.dart';
 class MyAccountScreen extends StatelessWidget {
   const MyAccountScreen({super.key});
 
+  // Helper Ikon (Sama seperti di TrendDetail)
+  IconData _getAccountIcon(String accountName) {
+    final name = accountName.toLowerCase();
+    if (name.contains("cash")) {
+      return Icons.money;
+    } else if (name.contains("wallet") ||
+        name.contains("dompet") ||
+        name.contains("dana") ||
+        name.contains("ovo") ||
+        name.contains("gopay")) {
+      return Icons.account_balance_wallet;
+    } else if (name.contains("bank") ||
+        name.contains("bca") ||
+        name.contains("mandiri") ||
+        name.contains("bri")) {
+      return Icons.account_balance;
+    } else {
+      return Icons.account_balance_wallet;
+    }
+  }
+
   void _showEditDialog(BuildContext context, AccountModel account) {
     final nameController = TextEditingController(text: account.name);
-    String selectedType = 'Cash'; // Default fallback
-    // Try to match type, backend might save different case
-    if (['Cash', 'Bank', 'E-wallet'].contains(account.name)) {
-      // Logic simple untuk type, idealnya account model punya field 'type' asli
-    }
-
-    // Note: Model kita tadi belum ada field 'type' di AccountModel (hanya name & balance).
-    // Untuk update yang proper, kamu perlu update AccountModel.dart untuk include field 'type' juga.
-    // Asumsi sementara: kita biarkan user pilih type baru.
+    String selectedType = 'Cash';
+    // Simple logic deteksi tipe awal
+    if (account.name.toLowerCase().contains('bank'))
+      selectedType = 'Bank';
+    else if (account.name.toLowerCase().contains('wallet'))
+      selectedType = 'E-wallet';
 
     showDialog(
       context: context,
@@ -33,7 +51,7 @@ class MyAccountScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              initialValue: selectedType,
+              value: selectedType,
               items: [
                 'Cash',
                 'Bank',
@@ -98,7 +116,11 @@ class MyAccountScreen extends StatelessWidget {
                         color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.wallet, color: AppColors.primary),
+                      // MENGGUNAKAN HELPER IKON
+                      child: Icon(
+                        _getAccountIcon(account.name),
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -123,13 +145,11 @@ class MyAccountScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Action Buttons
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.blue),
                       onPressed: () => _showEditDialog(context, account),
                     ),
-                    if (!account
-                        .isDefault) // Disable delete for default account
+                    if (!account.isDefault)
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {

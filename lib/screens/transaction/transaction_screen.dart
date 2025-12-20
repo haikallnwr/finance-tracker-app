@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart'; // Import Constants untuk CategoryIconHelper
+import '../../core/constants.dart';
 import '../../providers/home_provider.dart';
 
 class TransactionScreen extends StatefulWidget {
@@ -12,18 +12,41 @@ class TransactionScreen extends StatefulWidget {
 }
 
 class _TransactionScreenState extends State<TransactionScreen> {
-  // Month Picker Dialog
-  void _showMonthPicker(BuildContext context, HomeProvider provider) async {
-    final DateTime? picked = await showDatePicker(
+  // Filter Tanggal Custom
+  DateTimeRange? _selectedDateRange;
+
+  // Function untuk memilih range tanggal
+  void _pickDateRange(BuildContext context, HomeProvider provider) async {
+    final DateTime now = DateTime.now();
+    final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      initialDate: provider.selectedMonth ?? DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      helpText:
-          "SELECT MONTH (Pick any day)", // Flutter date picker default pilih hari
+      lastDate: now.add(const Duration(days: 365)),
+      initialDateRange: _selectedDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.accent,
+              onPrimary: Colors.white,
+              onSurface: AppColors.primary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null) {
-      provider.setFilterMonth(picked);
+      setState(() {
+        _selectedDateRange = picked;
+      });
+      // Kita perlu custom filter di UI level atau update provider untuk support custom range
+      // SEMENTARA: Kita filter manual list yang didapat dari provider di widget build
+      // karena provider saat ini hanya support filterDays (int) atau selectedMonth (DateTime)
     }
   }
 
@@ -31,8 +54,31 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget build(BuildContext context) {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
-        // Menggunakan filteredTransactions agar menampilkan SEMUA data (bukan cuma 5)
-        final transactions = provider.filteredTransactions;
+        // Ambil semua transaksi (kita akan filter manual di sini untuk fleksibilitas search)
+        // Provider filteredTransactions sudah difilter berdasarkan filterDays/Month di provider.
+        // Agar fitur "Search by Range" bekerja maksimal, idealnya kita ambil raw data _allTransactions
+        // TAPI, karena getter _allTransactions private, kita gunakan filteredTransactions
+        // dengan asumsi user mereset filter provider ke "All Time" (-1) saat masuk screen ini atau kita reset otomatis.
+
+        // Agar aman, kita minta provider set filter ke All Time (-1) saat pertama kali buka atau via tombol reset
+        // Namun, jika kita ubah state provider di build method akan error.
+        // Solusi UI: Kita filter list yang ada saat ini.
+
+        List<dynamic> transactions = provider.filteredTransactions;
+
+        // LOGIC FILTER TANGGAL MANUAL (SEARCH)
+        if (_selectedDateRange != null) {
+          transactions = transactions.where((tx) {
+            // Normalisasi jam agar inklusif
+            DateTime txDate = tx.date;
+            DateTime start = _selectedDateRange!.start;
+            DateTime end = _selectedDateRange!.end
+                .add(const Duration(days: 1))
+                .subtract(const Duration(seconds: 1));
+            return txDate.isAfter(start.subtract(const Duration(seconds: 1))) &&
+                txDate.isBefore(end);
+          }).toList();
+        }
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -47,19 +93,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
             backgroundColor: Colors.white,
             elevation: 0,
             actions: [
-              // Tombol Reset Filter ke "All Time" jika sedang mode Bulan
-              if (provider.selectedMonth != null)
-                TextButton(
-                  onPressed: () => provider.setFilterDays(-1), // Reset
-                  child: const Text("Show All"),
-                ),
-              IconButton(
-                icon: const Icon(
-                  Icons.calendar_month,
-                  color: AppColors.primary,
-                ),
-                onPressed: () => _showMonthPicker(context, provider),
-              ),
               IconButton(
                 onPressed: () => provider.fetchData(),
                 icon: const Icon(Icons.refresh, color: AppColors.primary),
@@ -68,132 +101,129 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
           body: Column(
             children: [
-              // 1. REKAPAN PERBULAN (SUMMARY CARD) - Hanya muncul jika filter bulan aktif
-              if (provider.selectedMonth != null)
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Recap: ${DateFormat('MMMM yyyy').format(provider.selectedMonth!)}",
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Column(
+              // --- SEARCH / FILTER BAR ---
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                child: Row(
+                  children: [
+                    // Search Box (Trigger Date Picker)
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _pickDateRange(context, provider),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Row(
                             children: [
-                              const Text(
-                                "Income",
-                                style: TextStyle(
-                                  color: Colors.greenAccent,
-                                  fontSize: 12,
+                              const Icon(Icons.search, color: Colors.grey),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _selectedDateRange == null
+                                      ? "Search by Date..."
+                                      : "${DateFormat('dd MMM').format(_selectedDateRange!.start)} - ${DateFormat('dd MMM yyyy').format(_selectedDateRange!.end)}",
+                                  style: TextStyle(
+                                    color: _selectedDateRange == null
+                                        ? Colors.grey
+                                        : AppColors.primary,
+                                    fontWeight: _selectedDateRange == null
+                                        ? FontWeight.normal
+                                        : FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              Text(
-                                NumberFormat.currency(
-                                  locale: 'id_ID',
-                                  symbol: 'Rp ',
-                                  decimalDigits: 0,
-                                ).format(provider.totalIncome),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                              if (_selectedDateRange != null)
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedDateRange = null; // Reset filter
+                                    });
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.grey,
+                                  ),
+                                )
+                              else
+                                const Icon(
+                                  Icons.calendar_month,
+                                  size: 18,
+                                  color: Colors.grey,
                                 ),
-                              ),
                             ],
                           ),
-                          Container(
-                            height: 30,
-                            width: 1,
-                            color: Colors.white24,
-                          ),
-                          Column(
-                            children: [
-                              const Text(
-                                "Expense",
-                                style: TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                NumberFormat.currency(
-                                  locale: 'id_ID',
-                                  symbol: 'Rp ',
-                                  decimalDigits: 0,
-                                ).format(provider.totalExpense),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 15),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          "Net: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(provider.totalIncome - provider.totalExpense)}",
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Quick Filter Dropdown (Pengganti All Time & Chips)
+                    // Menggunakan logic provider filterDays
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 2,
+                      ), // Adjust vertical padding for alignment
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: provider.filterDays,
+                          icon: const Icon(
+                            Icons.filter_list,
+                            color: AppColors.primary,
+                          ),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
+                          dropdownColor: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          onChanged: (int? newValue) {
+                            if (newValue != null) {
+                              provider.setFilterDays(newValue);
+                              // Reset custom date range jika quick filter dipilih agar tidak bentrok
+                              setState(() {
+                                _selectedDateRange = null;
+                              });
+                            }
+                          },
+                          items: const [
+                            DropdownMenuItem(value: 7, child: Text("7 Days")),
+                            DropdownMenuItem(value: 30, child: Text("30 Days")),
+                            DropdownMenuItem(
+                              value: 90,
+                              child: Text("3 Months"),
+                            ),
+                            DropdownMenuItem(
+                              value: 180,
+                              child: Text("6 Months"),
+                            ),
+                            DropdownMenuItem(value: 365, child: Text("1 Year")),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                )
-              else
-                // Filter Chips Biasa
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _filterChip("7 Days", 7, provider),
-                        const SizedBox(width: 8),
-                        _filterChip("30 Days", 30, provider),
-                        const SizedBox(width: 8),
-                        _filterChip("All Time", -1, provider),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
+              ),
 
-              // 2. LIST TRANSAKSI LENGKAP
+              // --- LIST TRANSAKSI ---
               Expanded(
                 child: provider.isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -203,15 +233,24 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.history,
+                              Icons.receipt_long_outlined,
                               size: 60,
                               color: Colors.grey.shade300,
                             ),
-                            const SizedBox(height: 10),
-                            const Text(
+                            const SizedBox(height: 16),
+                            Text(
                               "No transactions found",
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 16,
+                              ),
                             ),
+                            if (_selectedDateRange != null)
+                              TextButton(
+                                onPressed: () =>
+                                    setState(() => _selectedDateRange = null),
+                                child: const Text("Clear Search"),
+                              ),
                           ],
                         ),
                       )
@@ -225,88 +264,51 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           final tx = transactions[index];
                           final isIncome = tx.type == 'Income';
 
-                          return Card(
+                          return Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment
-                                    .start, // Align top biar rapi kalau deskripsi panjang
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: isIncome
+                                      ? AppColors.success.withOpacity(0.1)
+                                      : AppColors.error.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  CategoryIconHelper.getIcon(tx.categoryName),
+                                  color: isIncome
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  // ICON DINAMIS DARI HELPER
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: isIncome
-                                          ? AppColors.success.withOpacity(0.1)
-                                          : AppColors.error.withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      CategoryIconHelper.getIcon(
-                                        tx.categoryName,
-                                      ), // <--- PAKAI HELPER
-                                      color: isIncome
-                                          ? AppColors.success
-                                          : AppColors.error,
-                                      size: 20,
+                                  Text(
+                                    tx.categoryName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
-
-                                  // INFO TEXT
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Nama Kategori
-                                        Text(
-                                          tx.categoryName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-
-                                        const SizedBox(height: 4),
-
-                                        // Deskripsi (Muncul jika ada)
-                                        if (tx.description.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 4.0,
-                                            ),
-                                            child: Text(
-                                              tx.description,
-                                              style: TextStyle(
-                                                color: Colors.grey.shade800,
-                                                fontSize: 13,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-
-                                        // Akun & Tanggal
-                                        Text(
-                                          "${tx.accountName} • ${DateFormat('dd MMM yyyy, HH:mm').format(tx.date)}",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 8),
-
-                                  // AMOUNT
                                   Text(
                                     "${isIncome ? '+' : '-'} ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(tx.amount)}",
                                     style: TextStyle(
@@ -319,6 +321,62 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                   ),
                                 ],
                               ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  if (tx.description.isNotEmpty)
+                                    Text(
+                                      tx.description,
+                                      style: TextStyle(
+                                        color: Colors.grey.shade800,
+                                        fontSize: 13,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 12,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        DateFormat(
+                                          'dd MMM yyyy, HH:mm',
+                                        ).format(tx.date),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        width: 4,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade300,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          tx.accountName,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
@@ -328,24 +386,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _filterChip(String label, int days, HomeProvider provider) {
-    bool isSelected =
-        provider.filterDays == days && provider.selectedMonth == null;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (bool selected) {
-        if (selected) provider.setFilterDays(days);
-      },
-      selectedColor: AppColors.accent,
-      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
-      backgroundColor: Colors.grey.shade100,
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      showCheckmark: false,
     );
   }
 }

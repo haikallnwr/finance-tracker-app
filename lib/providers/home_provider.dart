@@ -23,16 +23,17 @@ class HomeProvider with ChangeNotifier {
   Map<String, double> _chartData = {};
 
   // Processed Data
-  List<TransactionModel> _recentTransactions = []; // Top 5 untuk Home
-  List<TransactionModel> _filteredTransactions =
-      []; // Full list untuk Transaction Page
+  List<TransactionModel> _recentTransactions = [];
+  List<TransactionModel> _filteredTransactions = [];
   List<FlSpot> _trendSpots = [];
   double _maxTrendValue = 100;
+  double _minTrendValue = 0;
 
   // Filter State
   String? _selectedAccountId;
-  int _filterDays = 30;
-  DateTime? _selectedMonth; // Filter baru: Bulan Spesifik
+  int _filterDays =
+      30; // 7, 30, 90 (3 bulan), 180 (6 bulan), 365 (1 tahun), -1 (All Time)
+  DateTime? _selectedMonth; // Filter Bulan Spesifik
 
   // Getters
   bool get isLoading => _isLoading;
@@ -45,10 +46,10 @@ class HomeProvider with ChangeNotifier {
   String? get selectedAccountId => _selectedAccountId;
 
   List<TransactionModel> get recentTransactions => _recentTransactions;
-  List<TransactionModel> get filteredTransactions =>
-      _filteredTransactions; // Getter baru
+  List<TransactionModel> get filteredTransactions => _filteredTransactions;
   List<FlSpot> get trendSpots => _trendSpots;
   double get maxTrendValue => _maxTrendValue;
+  double get minTrendValue => _minTrendValue;
   int get filterDays => _filterDays;
   DateTime? get selectedMonth => _selectedMonth;
 
@@ -90,6 +91,7 @@ class HomeProvider with ChangeNotifier {
         _allTransactions = transJson
             .map((json) => TransactionModel.fromJson(json))
             .toList();
+        // Sort descending (terbaru di atas)
         _allTransactions.sort((a, b) => b.date.compareTo(a.date));
       }
 
@@ -123,14 +125,14 @@ class HomeProvider with ChangeNotifier {
 
   void setFilterDays(int days) {
     _filterDays = days;
-    _selectedMonth = null; // Reset filter bulan jika filter hari dipakai
+    _selectedMonth = null;
     _recalculateData();
     notifyListeners();
   }
 
   void setFilterMonth(DateTime month) {
     _selectedMonth = month;
-    _filterDays = -2; // Code khusus untuk menandakan mode "Bulan"
+    _filterDays = -2; // Kode khusus mode bulan
     _recalculateData();
     notifyListeners();
   }
@@ -141,11 +143,12 @@ class HomeProvider with ChangeNotifier {
     _displayedExpense = 0;
     _chartData = {};
     _recentTransactions = [];
-    _filteredTransactions = []; // Reset full list
+    _filteredTransactions = [];
 
-    Map<int, double> dailyTotals = {};
+    // Map untuk menyimpan CASHFLOW harian (Income - Expense)
+    Map<DateTime, double> dailyCashflowMap = {};
 
-    // 1. Balance Logic (Selalu real-time dari akun)
+    // 1. Hitung Saldo Total (Real-time dari akun)
     if (_selectedAccountId == null) {
       _displayedBalance = _accounts.fold(
         0,
@@ -162,54 +165,62 @@ class HomeProvider with ChangeNotifier {
     }
 
     DateTime now = DateTime.now();
-    DateTime? startDate;
+    DateTime today = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ); // Normalisasi hari ini (jam 00:00)
 
-    // Tentukan Range Filter
-    if (_selectedMonth != null) {
-      // Filter Bulan Spesifik
-      // Tidak perlu startDate, logicnya nanti check bulan & tahun
-    } else if (_filterDays != -1) {
-      // Filter Hari (7 / 30 hari)
-      startDate = now.subtract(Duration(days: _filterDays));
+    // Tentukan range filter (Start Date)
+    DateTime? startDate;
+    if (_filterDays != -1 && _selectedMonth == null) {
+      // Jika filter 7 hari, kita mau H-6 sampai H-0 (total 7 hari)
+      startDate = today.subtract(Duration(days: _filterDays - 1));
     }
 
+    // 2. Loop Semua Transaksi
     for (var tx in _allTransactions) {
       bool matchAccount =
           _selectedAccountId == null || tx.accountName == selectedAccountName;
-      bool matchDate = true;
+      DateTime txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
 
+      bool matchDate = true;
       if (_selectedMonth != null) {
-        // Cek Bulan & Tahun
         matchDate =
             tx.date.month == _selectedMonth!.month &&
             tx.date.year == _selectedMonth!.year;
       } else if (startDate != null) {
-        // Cek Hari kebelakang
-        matchDate = tx.date.isAfter(startDate);
+        matchDate = !txDate.isBefore(startDate);
       }
 
       if (matchAccount && matchDate) {
-        _filteredTransactions.add(tx); // Masukkan ke list filtered
+        _filteredTransactions.add(tx);
+
+        double amount = tx.amount;
+
+        // --- LOGIC BARU: HITUNG CASHFLOW ---
+        // Jika Income: Tambah (+), Jika Expense: Kurang (-)
+        double cashflowValue = (tx.type == 'Income') ? amount : -amount;
 
         if (tx.type == 'Income') {
-          _displayedIncome += tx.amount;
+          _displayedIncome += amount;
         } else {
-          _displayedExpense += tx.amount;
-
-          // Chart Pie Data
+          _displayedExpense += amount;
+          // Pie Chart hanya untuk Expense
           if (_chartData.containsKey(tx.categoryName)) {
-            _chartData[tx.categoryName] =
-                _chartData[tx.categoryName]! + tx.amount;
+            _chartData[tx.categoryName] = _chartData[tx.categoryName]! + amount;
           } else {
-            _chartData[tx.categoryName] = tx.amount;
+            _chartData[tx.categoryName] = amount;
           }
+        }
 
-          // Chart Line Data (Hanya jika mode filter hari, kalau mode bulan agak kompleks grafiknya jadi kita skip atau pakai logic tanggal)
-          if (_selectedMonth == null) {
-            int daysAgo = now.difference(tx.date).inDays;
-            if (daysAgo >= 0 && (_filterDays == -1 || daysAgo <= _filterDays)) {
-              dailyTotals[daysAgo] = (dailyTotals[daysAgo] ?? 0) + tx.amount;
-            }
+        // Simpan ke Map Cashflow
+        if (_selectedMonth == null) {
+          if (dailyCashflowMap.containsKey(txDate)) {
+            dailyCashflowMap[txDate] =
+                dailyCashflowMap[txDate]! + cashflowValue;
+          } else {
+            dailyCashflowMap[txDate] = cashflowValue;
           }
         }
       }
@@ -217,27 +228,38 @@ class HomeProvider with ChangeNotifier {
 
     _recentTransactions = _filteredTransactions.take(5).toList();
 
-    // Generate Trend Spots (Hanya valid jika Filter Hari aktif)
+    // 3. Generate Spot Grafik (Net Cashflow)
     _trendSpots = [];
-    _maxTrendValue = 100;
+    _maxTrendValue = 10;
+    _minTrendValue = 0;
+
     if (_selectedMonth == null) {
       int range = (_filterDays == -1) ? 30 : _filterDays;
-      if (_filterDays == -2) range = 30; // Fallback
+      if (_filterDays == -2) range = 30;
 
-      for (int i = range; i >= 0; i--) {
-        double val = dailyTotals[i] ?? 0;
+      // Loop mundur dari range-1 sampai 0
+      for (int i = range - 1; i >= 0; i--) {
+        DateTime checkDate = today.subtract(Duration(days: i));
+
+        // Ambil nilai cashflow (bisa positif atau negatif)
+        double val = dailyCashflowMap[checkDate] ?? 0;
+
+        // Update Max/Min untuk skala grafik
         if (val > _maxTrendValue) _maxTrendValue = val;
-        _trendSpots.add(FlSpot((range - i).toDouble(), val));
+        if (val < _minTrendValue) _minTrendValue = val;
+
+        // X-Axis
+        double xPos = (range - 1 - i).toDouble();
+        _trendSpots.add(FlSpot(xPos, val));
       }
     }
   }
 
-  // --- CRUD ACCOUNT ---
+  // --- CRUD FUNCTIONS (Sama) ---
   Future<bool> addAccount(String name, String type, double initBalance) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final url = Uri.parse('${ApiConstants.baseUrl}/account');
-
     try {
       final response = await http.post(
         url,
@@ -265,7 +287,6 @@ class HomeProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final url = Uri.parse('${ApiConstants.baseUrl}/account/$id');
-
     try {
       final response = await http.put(
         url,
@@ -289,7 +310,6 @@ class HomeProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final url = Uri.parse('${ApiConstants.baseUrl}/account/$id');
-
     try {
       final response = await http.delete(
         url,
@@ -305,7 +325,6 @@ class HomeProvider with ChangeNotifier {
     }
   }
 
-  // --- CRUD TRANSACTION & CATEGORY (Same as before) ---
   Future<bool> addTransaction({
     required String accountId,
     required String categoryId,
@@ -351,7 +370,11 @@ class HomeProvider with ChangeNotifier {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'name': name, 'type': type}),
+        body: jsonEncode({
+          'name': name,
+          'type': type,
+          'user_id': prefs.getString('userId'), // Asumsi ID user dibutuhkan
+        }),
       );
       if (response.statusCode == 201) {
         await fetchData();

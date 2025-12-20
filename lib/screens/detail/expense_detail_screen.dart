@@ -23,10 +23,28 @@ class ExpenseDetailScreen extends StatelessWidget {
       ),
       body: Consumer<HomeProvider>(
         builder: (context, provider, child) {
-          // Logic Top 5 Expense Categories
           final sortedEntries = provider.chartData.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value)); // Sort besar ke kecil
+            ..sort((a, b) => b.value.compareTo(a.value));
           final top5 = sortedEntries.take(5).toList();
+
+          // --- LOGIC DROPDOWN FILTER ---
+          final List<int> longTermOptions = [90, 180, 365, -1];
+          bool isLongTermSelected = longTermOptions.contains(
+            provider.filterDays,
+          );
+
+          // Helper untuk label
+          String getLabel(int days) {
+            if (days == 90) return "3 Months";
+            if (days == 180) return "6 Months";
+            if (days == 365) return "1 Year";
+            return "";
+          }
+
+          String dropdownLabel = "More";
+          if (isLongTermSelected) {
+            dropdownLabel = getLabel(provider.filterDays);
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -42,13 +60,92 @@ class ExpenseDetailScreen extends StatelessWidget {
                       const SizedBox(width: 8),
                       _filterChip("30 Days", 30, provider),
                       const SizedBox(width: 8),
-                      _filterChip("All Time", -1, provider),
+
+                      // DROPDOWN FILTER
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isLongTermSelected
+                              ? AppColors.accent
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isLongTermSelected
+                                ? AppColors.accent
+                                : Colors.grey.shade200,
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: isLongTermSelected
+                                ? provider.filterDays
+                                : null,
+                            hint: Text(
+                              dropdownLabel,
+                              style: TextStyle(
+                                color: isLongTermSelected
+                                    ? Colors.white
+                                    : Colors.black,
+                                fontWeight: isLongTermSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              color: isLongTermSelected
+                                  ? Colors.white
+                                  : Colors.black54,
+                            ),
+                            isDense: true,
+                            dropdownColor: Colors.white,
+
+                            style: const TextStyle(color: Colors.black),
+
+                            selectedItemBuilder: (BuildContext context) {
+                              return longTermOptions.map<Widget>((int value) {
+                                return Center(
+                                  child: Text(
+                                    getLabel(value),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }).toList();
+                            },
+
+                            onChanged: (int? newValue) {
+                              if (newValue != null) {
+                                provider.setFilterDays(newValue);
+                              }
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                value: 90,
+                                child: Text("3 Months"),
+                              ),
+                              DropdownMenuItem(
+                                value: 180,
+                                child: Text("6 Months"),
+                              ),
+                              DropdownMenuItem(
+                                value: 365,
+                                child: Text("1 Year"),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // Chart Besar
                 Container(
                   height: 300,
                   padding: const EdgeInsets.all(20),
@@ -72,7 +169,6 @@ class ExpenseDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // List Top 5
                 ...top5.map((entry) {
                   double total = provider.totalExpense;
                   double percentage = total == 0 ? 0 : (entry.value / total);
@@ -129,7 +225,7 @@ class ExpenseDetailScreen extends StatelessWidget {
                       ],
                     ),
                   );
-                }),
+                }).toList(),
               ],
             ),
           );

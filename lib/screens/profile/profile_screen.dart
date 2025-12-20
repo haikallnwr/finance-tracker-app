@@ -66,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
               context,
               icon: Icons.edit,
               title: "Edit Profile",
-              subtitle: "Ubah nama atau email",
+              subtitle: "Change your personal information",
               onTap: () {
                 Navigator.push(
                   context,
@@ -78,8 +78,8 @@ class ProfileScreen extends StatelessWidget {
             _buildMenuItem(
               context,
               icon: Icons.lock,
-              title: "Ganti Password",
-              subtitle: "Perbarui keamanan akun",
+              title: "Change Password",
+              subtitle: "Update your account security",
               onTap: () {
                 Navigator.push(
                   context,
@@ -94,7 +94,7 @@ class ProfileScreen extends StatelessWidget {
               context,
               icon: Icons.account_balance_wallet,
               title: "My Accounts",
-              subtitle: "Kelola dompet dan rekening",
+              subtitle: "View and manage your accounts",
               onTap: () {
                 Navigator.push(
                   context,
@@ -107,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
               context,
               icon: Icons.logout,
               title: "Logout",
-              subtitle: "Keluar dari aplikasi",
+              subtitle: "Log out of application",
               color: Colors.red,
               onTap: () {
                 Provider.of<AuthProvider>(context, listen: false).logout();

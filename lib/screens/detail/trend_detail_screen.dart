@@ -8,13 +8,30 @@ import '../../providers/home_provider.dart';
 class TrendDetailScreen extends StatelessWidget {
   const TrendDetailScreen({super.key});
 
+  IconData _getAccountIcon(String accountName, String accountType) {
+    final name = accountName.toLowerCase();
+    final type = accountType.toLowerCase();
+
+    if (name.contains("cash") || type.contains("cash")) {
+      return Icons.money;
+    } else if (name.contains("wallet") ||
+        name.contains("dompet") ||
+        type.contains("e-wallet")) {
+      return Icons.account_balance_wallet;
+    } else if (name.contains("bank") || type.contains("bank")) {
+      return Icons.account_balance;
+    } else {
+      return Icons.account_balance_wallet;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Trend & Balance',
+          'Balance Trend Detail',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -23,6 +40,33 @@ class TrendDetailScreen extends StatelessWidget {
       ),
       body: Consumer<HomeProvider>(
         builder: (context, provider, child) {
+          double averageExpense = 0;
+          if (provider.trendSpots.isNotEmpty && provider.filterDays > 0) {
+            double total = provider.trendSpots.fold(
+              0,
+              (sum, item) => sum + item.y,
+            );
+            averageExpense = total / provider.filterDays;
+          }
+
+          // --- LOGIC DROPDOWN FILTER (CONSISTENT WITH HOME) ---
+          final List<int> longTermOptions = [90, 180, 365]; // Removed -1
+          bool isLongTermSelected = longTermOptions.contains(
+            provider.filterDays,
+          );
+
+          String getLabel(int days) {
+            if (days == 90) return "3 Months";
+            if (days == 180) return "6 Months";
+            if (days == 365) return "1 Year";
+            return "";
+          }
+
+          String dropdownLabel = "More";
+          if (isLongTermSelected) {
+            dropdownLabel = getLabel(provider.filterDays);
+          }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -33,19 +77,131 @@ class TrendDetailScreen extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _filterChip("7 Days", 7, provider),
+                      _filterChip("7 Day", 7, provider),
                       const SizedBox(width: 8),
-                      _filterChip("30 Days", 30, provider),
+                      _filterChip("30 Day", 30, provider),
                       const SizedBox(width: 8),
-                      _filterChip("All Time", -1, provider),
+
+                      // DROPDOWN FILTER
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isLongTermSelected
+                              ? AppColors.accent
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: isLongTermSelected
+                                ? AppColors.accent
+                                : Colors.grey.shade200,
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: isLongTermSelected
+                                ? provider.filterDays
+                                : null,
+                            hint: Text(
+                              dropdownLabel,
+                              style: TextStyle(
+                                color: isLongTermSelected
+                                    ? Colors.white
+                                    : Colors.black,
+                                fontWeight: isLongTermSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              color: isLongTermSelected
+                                  ? Colors.white
+                                  : Colors.black54,
+                            ),
+                            isDense: true,
+                            dropdownColor: Colors.white,
+                            style: const TextStyle(color: Colors.black),
+
+                            // Builder untuk Tampilan Tombol saat TERTUTUP -> PUTIH
+                            selectedItemBuilder: (BuildContext context) {
+                              return longTermOptions.map<Widget>((int value) {
+                                return Center(
+                                  child: Text(
+                                    getLabel(value),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }).toList();
+                            },
+
+                            onChanged: (int? newValue) {
+                              if (newValue != null) {
+                                provider.setFilterDays(newValue);
+                              }
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                value: 90,
+                                child: Text("3 Months"),
+                              ),
+                              DropdownMenuItem(
+                                value: 180,
+                                child: Text("6 Months"),
+                              ),
+                              DropdownMenuItem(
+                                value: 365,
+                                child: Text("1 Year"),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // Line Chart Besar
+                if (provider.filterDays > 0)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Average Daily Expense",
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          NumberFormat.currency(
+                            locale: 'id_ID',
+                            symbol: 'Rp ',
+                            decimalDigits: 0,
+                          ).format(averageExpense),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 Container(
-                  height: 300,
+                  height: 350,
                   padding: const EdgeInsets.fromLTRB(10, 20, 20, 10),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -56,9 +212,8 @@ class TrendDetailScreen extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // Balance By Account Breakdown
                 const Text(
-                  "Balance by Account",
+                  "Current Account Balances",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
@@ -78,9 +233,7 @@ class TrendDetailScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          account.name.toLowerCase().contains("bank")
-                              ? Icons.account_balance
-                              : Icons.wallet,
+                          _getAccountIcon(account.name, ""),
                           color: AppColors.primary,
                         ),
                       ),
@@ -102,7 +255,7 @@ class TrendDetailScreen extends StatelessWidget {
                       ),
                     ),
                   );
-                }),
+                }).toList(),
               ],
             ),
           );
@@ -129,11 +282,29 @@ class TrendDetailScreen extends StatelessWidget {
   Widget _buildLineChart(HomeProvider provider) {
     if (provider.trendSpots.isEmpty ||
         provider.trendSpots.every((spot) => spot.y == 0)) {
-      return const Center(child: Text("No data for this period"));
+      return const Center(child: Text("No data available"));
     }
+
+    double rangeY = provider.maxTrendValue - provider.minTrendValue;
+    if (rangeY == 0) rangeY = 10;
+
+    double intervalY = rangeY / 5;
+    double minY = provider.minTrendValue - (intervalY * 0.5);
+    double maxY = provider.maxTrendValue + (intervalY * 0.5);
+
     return LineChart(
       LineChartData(
-        gridData: FlGridData(show: true, drawVerticalLine: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: intervalY,
+          getDrawingHorizontalLine: (value) {
+            if (value == 0) {
+              return FlLine(color: Colors.black26, strokeWidth: 2);
+            }
+            return FlLine(color: Colors.grey.shade200, strokeWidth: 1);
+          },
+        ),
         titlesData: FlTitlesData(
           show: true,
           topTitles: const AxisTitles(
@@ -142,21 +313,54 @@ class TrendDetailScreen extends StatelessWidget {
           rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          bottomTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ), // Hide X axis labels for cleaner look in detail
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              interval:
+                  (provider.filterDays == -1 ? 30 : provider.filterDays) / 5,
+              getTitlesWidget: (value, meta) {
+                int totalDays = provider.filterDays == -1
+                    ? 30
+                    : provider.filterDays;
+                int daysAgo = totalDays - value.toInt();
+                DateTime date = DateTime.now().subtract(
+                  Duration(days: daysAgo),
+                );
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    DateFormat('d MMM').format(date),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                  ),
+                );
+              },
+            ),
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
-              interval: provider.maxTrendValue > 0
-                  ? provider.maxTrendValue / 4
-                  : 1,
-              getTitlesWidget: (v, m) {
-                if (v == 0) return const SizedBox();
+              reservedSize: 45,
+              interval: intervalY,
+              getTitlesWidget: (value, meta) {
+                if (value == 0)
+                  return const Text(
+                    "0",
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  );
+
+                String text;
+                if (value.abs() >= 1000000) {
+                  text = '${(value / 1000000).toStringAsFixed(1)}M';
+                } else if (value.abs() >= 1000) {
+                  text = '${(value / 1000).toStringAsFixed(0)}k';
+                } else {
+                  text = value.toInt().toString();
+                }
                 return Text(
-                  '${(v / 1000).toStringAsFixed(0)}k',
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  text,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
                 );
               },
             ),
@@ -165,8 +369,8 @@ class TrendDetailScreen extends StatelessWidget {
         borderData: FlBorderData(show: false),
         minX: 0,
         maxX: (provider.filterDays == -1 ? 30 : provider.filterDays).toDouble(),
-        minY: 0,
-        maxY: provider.maxTrendValue * 1.2,
+        minY: minY,
+        maxY: maxY,
         lineBarsData: [
           LineChartBarData(
             spots: provider.trendSpots,
@@ -174,13 +378,43 @@ class TrendDetailScreen extends StatelessWidget {
             color: AppColors.accent,
             barWidth: 3,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
+            dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.accent.withOpacity(0.1),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.accent.withOpacity(0.3),
+                  AppColors.accent.withOpacity(0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
         ],
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+              return touchedBarSpots.map((barSpot) {
+                final val = barSpot.y;
+                final prefix = val > 0 ? "+" : "";
+                final color = val >= 0 ? Colors.greenAccent : Colors.redAccent;
+                final formatter = NumberFormat.currency(
+                  locale: 'id_ID',
+                  symbol: 'Rp ',
+                  decimalDigits: 0,
+                );
+
+                return LineTooltipItem(
+                  "$prefix${formatter.format(val)}",
+                  TextStyle(color: color, fontWeight: FontWeight.bold),
+                );
+              }).toList();
+            },
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.all(8),
+          ),
+        ),
       ),
     );
   }

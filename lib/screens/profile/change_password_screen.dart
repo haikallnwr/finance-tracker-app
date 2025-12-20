@@ -23,7 +23,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Ganti Password',
+          'Change Password',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -38,7 +38,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _oldPassController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Password Lama',
+                labelText: 'Old Password',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -50,7 +50,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _newPassController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Password Baru',
+                labelText: 'New Password',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -62,7 +62,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               controller: _confirmPassController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: 'Konfirmasi Password Baru',
+                labelText: 'Confirm New Password',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -81,7 +81,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             _confirmPassController.text) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("Password baru tidak cocok"),
+                              content: Text(
+                                "New password and confirmation do not match.",
+                              ),
                             ),
                           );
                           return;
@@ -98,7 +100,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         if (success) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("Password Berhasil Diganti!"),
+                              content: Text("Password changed successfully!"),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -106,9 +108,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                "Gagal mengganti password. Cek password lama.",
-                              ),
+                              content: Text("failed to change password."),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -124,7 +124,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 child: auth.isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
-                        "Ganti Password",
+                        "Change Password",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
               ),

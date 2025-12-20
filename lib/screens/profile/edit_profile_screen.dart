@@ -81,7 +81,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         if (success) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("Profile Berhasil Diupdate!"),
+                              content: Text("Profile updated successfully!"),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -91,7 +91,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("Gagal update profile"),
+                              content: Text("Failed to update profile."),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -107,7 +107,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: auth.isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
-                        "Simpan Perubahan",
+                        "Save Changes",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
               ),
