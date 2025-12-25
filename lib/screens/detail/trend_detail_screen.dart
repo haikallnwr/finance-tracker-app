@@ -255,7 +255,7 @@ class TrendDetailScreen extends StatelessWidget {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           );
@@ -275,6 +275,10 @@ class TrendDetailScreen extends StatelessWidget {
       selectedColor: AppColors.accent,
       labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
       backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       showCheckmark: false,
     );
   }
@@ -343,11 +347,12 @@ class TrendDetailScreen extends StatelessWidget {
               reservedSize: 45,
               interval: intervalY,
               getTitlesWidget: (value, meta) {
-                if (value == 0)
+                if (value == 0) {
                   return const Text(
                     "0",
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   );
+                }
 
                 String text;
                 if (value.abs() >= 1000000) {
@@ -376,9 +381,9 @@ class TrendDetailScreen extends StatelessWidget {
             spots: provider.trendSpots,
             isCurved: true,
             color: AppColors.accent,
-            barWidth: 3,
+            barWidth: 2,
             isStrokeCapRound: true,
-            dotData: FlDotData(show: true),
+            dotData: FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(

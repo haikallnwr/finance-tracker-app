@@ -28,7 +28,7 @@ class ExpenseDetailScreen extends StatelessWidget {
           final top5 = sortedEntries.take(5).toList();
 
           // --- LOGIC DROPDOWN FILTER ---
-          final List<int> longTermOptions = [90, 180, 365, -1];
+          final List<int> longTermOptions = [90, 180, 365];
           bool isLongTermSelected = longTermOptions.contains(
             provider.filterDays,
           );
@@ -225,7 +225,7 @@ class ExpenseDetailScreen extends StatelessWidget {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           );
@@ -245,6 +245,10 @@ class ExpenseDetailScreen extends StatelessWidget {
       selectedColor: AppColors.accent,
       labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
       backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       showCheckmark: false,
     );
   }
@@ -270,19 +274,19 @@ class ExpenseDetailScreen extends StatelessWidget {
   Color _getColor(String category) {
     switch (category) {
       case "Food & Drink":
-        return Colors.orange;
+        return Color(0xFF7A5C3E);
       case "Transport":
-        return Colors.blue;
+        return Color(0xFF2F4A66);
       case "Shopping":
-        return Colors.pinkAccent;
+        return Color(0xFF5A3F4D);
       case "Bills":
-        return Colors.redAccent;
+        return Color(0xFF3A3A3A);
       case "Entertainment":
-        return Colors.purpleAccent;
+        return Color(0xFF3E3A5C);
       case "Health":
-        return Colors.green;
+        return Color(0xFF3E5C4A);
       case "Salary":
-        return Colors.teal;
+        return Color(0xFF2F5C5A);
       default:
         return Colors.grey;
     }

@@ -31,8 +31,7 @@ class HomeProvider with ChangeNotifier {
 
   // Filter State
   String? _selectedAccountId;
-  int _filterDays =
-      30; // 7, 30, 90 (3 bulan), 180 (6 bulan), 365 (1 tahun), -1 (All Time)
+  int _filterDays = 30; // 7, 30, 90, 180, 365, -1
   DateTime? _selectedMonth; // Filter Bulan Spesifik
 
   // Getters
@@ -47,6 +46,7 @@ class HomeProvider with ChangeNotifier {
 
   List<TransactionModel> get recentTransactions => _recentTransactions;
   List<TransactionModel> get filteredTransactions => _filteredTransactions;
+  List<TransactionModel> get allTransactions => _allTransactions;
   List<FlSpot> get trendSpots => _trendSpots;
   double get maxTrendValue => _maxTrendValue;
   double get minTrendValue => _minTrendValue;
@@ -91,7 +91,7 @@ class HomeProvider with ChangeNotifier {
         _allTransactions = transJson
             .map((json) => TransactionModel.fromJson(json))
             .toList();
-        // Sort descending (terbaru di atas)
+        // PENTING: Sort descending (terbaru di atas) untuk memudahkan perhitungan mundur
         _allTransactions.sort((a, b) => b.date.compareTo(a.date));
       }
 
@@ -145,10 +145,8 @@ class HomeProvider with ChangeNotifier {
     _recentTransactions = [];
     _filteredTransactions = [];
 
-    // Map untuk menyimpan CASHFLOW harian (Income - Expense)
-    Map<DateTime, double> dailyCashflowMap = {};
-
-    // 1. Hitung Saldo Total (Real-time dari akun)
+    // 1. Hitung Saldo Total Saat Ini (Real-time dari akun)
+    // Ini akan menjadi titik awal (hari ini) untuk perhitungan mundur grafik
     if (_selectedAccountId == null) {
       _displayedBalance = _accounts.fold(
         0,
@@ -164,63 +162,52 @@ class HomeProvider with ChangeNotifier {
       }
     }
 
+    // --- SETUP FILTER & HITUNG SUMMARY DATA ---
     DateTime now = DateTime.now();
-    DateTime today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ); // Normalisasi hari ini (jam 00:00)
+    DateTime today = DateTime(now.year, now.month, now.day);
 
-    // Tentukan range filter (Start Date)
     DateTime? startDate;
     if (_filterDays != -1 && _selectedMonth == null) {
-      // Jika filter 7 hari, kita mau H-6 sampai H-0 (total 7 hari)
       startDate = today.subtract(Duration(days: _filterDays - 1));
     }
 
-    // 2. Loop Semua Transaksi
+    // List transaksi khusus untuk perhitungan grafik (hanya akun terpilih)
+    List<TransactionModel> accountSpecificTransactions = [];
+
     for (var tx in _allTransactions) {
       bool matchAccount =
           _selectedAccountId == null || tx.accountName == selectedAccountName;
-      DateTime txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
 
-      bool matchDate = true;
-      if (_selectedMonth != null) {
-        matchDate =
-            tx.date.month == _selectedMonth!.month &&
-            tx.date.year == _selectedMonth!.year;
-      } else if (startDate != null) {
-        matchDate = !txDate.isBefore(startDate);
-      }
+      if (matchAccount) {
+        // Simpan untuk perhitungan grafik nanti
+        accountSpecificTransactions.add(tx);
 
-      if (matchAccount && matchDate) {
-        _filteredTransactions.add(tx);
+        // --- Filter Tanggal untuk Summary Income/Expense & List Transaksi ---
+        DateTime txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+        bool matchDate = true;
 
-        double amount = tx.amount;
-
-        // --- LOGIC BARU: HITUNG CASHFLOW ---
-        // Jika Income: Tambah (+), Jika Expense: Kurang (-)
-        double cashflowValue = (tx.type == 'Income') ? amount : -amount;
-
-        if (tx.type == 'Income') {
-          _displayedIncome += amount;
-        } else {
-          _displayedExpense += amount;
-          // Pie Chart hanya untuk Expense
-          if (_chartData.containsKey(tx.categoryName)) {
-            _chartData[tx.categoryName] = _chartData[tx.categoryName]! + amount;
-          } else {
-            _chartData[tx.categoryName] = amount;
-          }
+        if (_selectedMonth != null) {
+          matchDate =
+              tx.date.month == _selectedMonth!.month &&
+              tx.date.year == _selectedMonth!.year;
+        } else if (startDate != null) {
+          matchDate = !txDate.isBefore(startDate);
         }
 
-        // Simpan ke Map Cashflow
-        if (_selectedMonth == null) {
-          if (dailyCashflowMap.containsKey(txDate)) {
-            dailyCashflowMap[txDate] =
-                dailyCashflowMap[txDate]! + cashflowValue;
+        if (matchDate) {
+          _filteredTransactions.add(tx);
+
+          if (tx.type == 'Income') {
+            _displayedIncome += tx.amount;
           } else {
-            dailyCashflowMap[txDate] = cashflowValue;
+            _displayedExpense += tx.amount;
+            // Pie Chart Data (Hanya Expense)
+            if (_chartData.containsKey(tx.categoryName)) {
+              _chartData[tx.categoryName] =
+                  _chartData[tx.categoryName]! + tx.amount;
+            } else {
+              _chartData[tx.categoryName] = tx.amount;
+            }
           }
         }
       }
@@ -228,31 +215,78 @@ class HomeProvider with ChangeNotifier {
 
     _recentTransactions = _filteredTransactions.take(5).toList();
 
-    // 3. Generate Spot Grafik (Net Cashflow)
+    // --- 3. GENERATE BALANCE TREND (LOGIKA MUNDUR) ---
+    // Kita mulai dari _displayedBalance (Saldo Hari Ini) dan mundur ke belakang.
+    // Rumus Mundur: Saldo Kemarin = Saldo Hari Ini - Income Hari Ini + Expense Hari Ini
+
     _trendSpots = [];
-    _maxTrendValue = 10;
-    _minTrendValue = 0;
+    double runningBalance = _displayedBalance;
+
+    // Inisialisasi Min/Max dengan saldo saat ini
+    double tempMin = runningBalance;
+    double tempMax = runningBalance;
 
     if (_selectedMonth == null) {
-      int range = (_filterDays == -1) ? 30 : _filterDays;
+      int range = (_filterDays == -1)
+          ? 30
+          : _filterDays; // Default 30 jika All Time untuk grafik
       if (_filterDays == -2) range = 30;
 
-      // Loop mundur dari range-1 sampai 0
-      for (int i = range - 1; i >= 0; i--) {
-        DateTime checkDate = today.subtract(Duration(days: i));
+      int txIndex = 0; // Pointer untuk list transaksi (sudah sort desc/terbaru)
 
-        // Ambil nilai cashflow (bisa positif atau negatif)
-        double val = dailyCashflowMap[checkDate] ?? 0;
+      // Loop dari Hari Ini (0) mundur ke masa lalu (range-1)
+      for (int i = 0; i < range; i++) {
+        // Tanggal yang sedang dicek
+        DateTime targetDate = today.subtract(Duration(days: i));
 
-        // Update Max/Min untuk skala grafik
-        if (val > _maxTrendValue) _maxTrendValue = val;
-        if (val < _minTrendValue) _minTrendValue = val;
-
-        // X-Axis
+        // Simpan titik grafik untuk hari ini (Saldo Akhir Hari tersebut)
+        // X = range - 1 - i.
+        // i=0 (Hari ini) -> X paling kanan.
+        // i=range-1 (Hari terlama) -> X paling kiri (0).
         double xPos = (range - 1 - i).toDouble();
-        _trendSpots.add(FlSpot(xPos, val));
+        _trendSpots.add(FlSpot(xPos, runningBalance));
+
+        // Update Min/Max
+        if (runningBalance > tempMax) tempMax = runningBalance;
+        if (runningBalance < tempMin) tempMin = runningBalance;
+
+        // Proses transaksi pada tanggal targetDate untuk mengembalikan saldo ke awal hari (atau akhir hari kemarin)
+        // Karena list transaksi urut dari Baru ke Lama, kita tinggal cek index selanjutnya
+        while (txIndex < accountSpecificTransactions.length) {
+          TransactionModel tx = accountSpecificTransactions[txIndex];
+          DateTime txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+
+          // Jika transaksi lebih baru dari targetDate (masa depan), skip (seharusnya tidak terjadi jika logic benar)
+          if (txDate.isAfter(targetDate)) {
+            txIndex++;
+            continue;
+          }
+
+          // Jika transaksi terjadi pada targetDate, kita "batalkan" efeknya untuk mendapatkan saldo sebelum transaksi
+          if (txDate.isAtSameMomentAs(targetDate)) {
+            if (tx.type == 'Income') {
+              runningBalance -= tx.amount; // Kurangi Income untuk mundur
+            } else {
+              runningBalance += tx.amount; // Tambah Expense untuk mundur
+            }
+            txIndex++;
+          } else {
+            // Transaksi lebih tua dari targetDate, berhenti loop transaksi hari ini
+            break;
+          }
+        }
       }
+
+      // Karena kita add dari kanan ke kiri (terbaru ke terlama), kita perlu reverse urutannya untuk FlChart?
+      // Tidak perlu reverse listnya karena kita sudah hitung xPos dengan benar:
+      // i=0 (Hari ini), xPos=Max -> Add pertama.
+      // i=Max (Lama), xPos=0 -> Add terakhir.
+      // FlChart biasanya pintar mengurutkan, tapi untuk amannya kita sort spots berdasarkan X.
+      _trendSpots.sort((a, b) => a.x.compareTo(b.x));
     }
+
+    _maxTrendValue = tempMax;
+    _minTrendValue = tempMin;
   }
 
   // --- CRUD FUNCTIONS (Sama) ---
@@ -370,11 +404,7 @@ class HomeProvider with ChangeNotifier {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'name': name,
-          'type': type,
-          'user_id': prefs.getString('userId'), // Asumsi ID user dibutuhkan
-        }),
+        body: jsonEncode({'name': name, 'type': type}),
       );
       if (response.statusCode == 201) {
         await fetchData();
@@ -382,6 +412,28 @@ class HomeProvider with ChangeNotifier {
       }
       return false;
     } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteCategory(String categoryId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final url = Uri.parse('${ApiConstants.baseUrl}/category/$categoryId');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        await fetchData(); // Refresh list kategori
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Delete Category Error: $e");
       return false;
     }
   }

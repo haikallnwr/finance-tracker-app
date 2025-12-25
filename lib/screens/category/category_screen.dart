@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart';
+import '../../core/constants.dart'; // Import Helper
 import '../../providers/home_provider.dart';
 import '../../models/category_model.dart';
 
@@ -134,6 +134,53 @@ class _CategoryScreenState extends State<CategoryScreen>
     );
   }
 
+  // --- LOGIC HAPUS KATEGORI ---
+  void _confirmDeleteCategory(
+    BuildContext context,
+    String categoryId,
+    String categoryName,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Delete Category"),
+        content: Text("Are you sure you want to delete '$categoryName'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Tutup dialog
+              final provider = Provider.of<HomeProvider>(
+                context,
+                listen: false,
+              );
+              bool success = await provider.deleteCategory(categoryId);
+
+              if (context.mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Category deleted"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Failed to delete category")),
+                  );
+                }
+              }
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<HomeProvider>(
@@ -148,6 +195,7 @@ class _CategoryScreenState extends State<CategoryScreen>
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: const Text(
               'Categories',
               style: TextStyle(
@@ -171,33 +219,26 @@ class _CategoryScreenState extends State<CategoryScreen>
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildCategoryList(expenseCategories, Colors.redAccent),
-              _buildCategoryList(incomeCategories, Colors.green),
+              _buildCategoryList(context, expenseCategories),
+              _buildCategoryList(context, incomeCategories),
             ],
           ),
-          // FAB Khusus Halaman Kategori (Untuk tambah kategori)
-          // FAB Global (Tambah Transaksi) tetap ada di Dashboard, tapi di halaman ini kita bisa override
-          // atau tambahkan tombol secondary.
-          // Sesuai request user "ada tombol buat kategori baru", kita taruh di AppBar actions atau FloatingActionButton
-          // Karena di dashboard sudah ada FAB center docked, kita pakai tombol di AppBar saja supaya tidak bentrok layoutnya.
           floatingActionButton: FloatingActionButton(
             onPressed: () => _showAddCategoryDialog(context),
             backgroundColor: Colors.white,
             foregroundColor: AppColors.primary,
             child: const Icon(Icons.playlist_add),
           ),
-          // Agar tidak menutupi FAB global di dashboard, kita geser sedikit ke atas (optional)
-          // Tapi karena CategoryScreen ada di dalam Tab Dashboard, scaffold ini jadi child.
-          // Dashboard punya FAB sendiri. Hati-hati bentrok.
-          // *SOLUSI:* Kita tidak pakai Scaffold di sini, atau kita pakai FAB yang posisinya 'endFloat' (pojok kanan)
-          // sedangkan FAB Dashboard 'centerDocked'. Jadi aman.
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
       },
     );
   }
 
-  Widget _buildCategoryList(List<CategoryModel> categories, Color iconColor) {
+  Widget _buildCategoryList(
+    BuildContext context,
+    List<CategoryModel> categories,
+  ) {
     if (categories.isEmpty) {
       return const Center(child: Text("No categories found"));
     }
@@ -207,6 +248,10 @@ class _CategoryScreenState extends State<CategoryScreen>
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final cat = categories[index];
+        final iconColor = CategoryIconHelper.getIconColor(cat.name);
+        // Cek apakah kategori ini buatan user (bisa dihapus) atau default (tidak bisa)
+        bool isCustomCategory = cat.userId != null;
+
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 0,
@@ -227,6 +272,14 @@ class _CategoryScreenState extends State<CategoryScreen>
               cat.name,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            // Tombol Hapus hanya muncul jika kategori custom
+            trailing: isCustomCategory
+                ? IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                    onPressed: () =>
+                        _confirmDeleteCategory(context, cat.id, cat.name),
+                  )
+                : null, // Kategori default tidak ada tombol hapus
           ),
         );
       },

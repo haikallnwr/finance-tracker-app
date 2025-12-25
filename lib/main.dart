@@ -1,3 +1,4 @@
+import 'package:budget_app/screens/welcome/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.accent),
         useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      home: const WelcomeScreen(),
     );
   }
 }

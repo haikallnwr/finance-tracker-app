@@ -33,9 +33,9 @@ class MyAccountScreen extends StatelessWidget {
     final nameController = TextEditingController(text: account.name);
     String selectedType = 'Cash';
     // Simple logic deteksi tipe awal
-    if (account.name.toLowerCase().contains('bank'))
+    if (account.name.toLowerCase().contains('bank')) {
       selectedType = 'Bank';
-    else if (account.name.toLowerCase().contains('wallet'))
+    } else if (account.name.toLowerCase().contains('wallet'))
       selectedType = 'E-wallet';
 
     showDialog(
@@ -51,7 +51,7 @@ class MyAccountScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              value: selectedType,
+              initialValue: selectedType,
               items: [
                 'Cash',
                 'Bank',

@@ -19,6 +19,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Profile',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -108,7 +109,6 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.logout,
               title: "Logout",
               subtitle: "Log out of application",
-              color: Colors.red,
               onTap: () {
                 Provider.of<AuthProvider>(context, listen: false).logout();
                 Navigator.of(context).pushAndRemoveUntil(

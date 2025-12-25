@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../providers/home_provider.dart';
 import '../home/home_screen.dart';
-import '../transaction/transaction_screen.dart';
+import '../analysis/analysis_screen.dart'; // Screen Baru
 import '../category/category_screen.dart';
-import '../profile/profile_screen.dart'; // <--- IMPORT BARU
+import '../profile/profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,18 +20,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Widget> _pages = [
     const HomeScreen(),
-    const TransactionScreen(),
+    const AnalysisScreen(),
     const CategoryScreen(),
-    const ProfileScreen(), // <--- GANTI JADI PROFILE SCREEN
+    const ProfileScreen(),
   ];
 
-  // --- LOGIC TAMBAH TRANSAKSI ---
   void _showAddTransactionDialog(BuildContext context) {
-    // ... (KODE SAMA PERSIS DENGAN SEBELUMNYA, COPY SAJA DARI FILE LAMA) ...
-    // Biar ringkas saya tidak tulis ulang logicnya disini,
-    // TAPI DI APLIKASI KAMU HARUS TETAP ADA
-
-    // START COPY PASTE LOGIC
+    // ... (Logic Add Transaction SAMA SEPERTI SEBELUMNYA, Copy Paste Saja) ...
+    // START COPY
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
     String type = 'Expense';
@@ -50,6 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final filteredCategories = provider.categories
               .where((cat) => cat.type == type)
               .toList();
+
           return AlertDialog(
             title: const Text('New Transaction'),
             content: SingleChildScrollView(
@@ -108,14 +105,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       labelText: 'Account',
                       border: OutlineInputBorder(),
                     ),
-                    items: provider.accounts
-                        .map(
-                          (acc) => DropdownMenuItem(
-                            value: acc.id,
-                            child: Text(acc.name),
-                          ),
-                        )
-                        .toList(),
+                    items: provider.accounts.map((acc) {
+                      return DropdownMenuItem(
+                        value: acc.id,
+                        child: Text(acc.name),
+                      );
+                    }).toList(),
                     onChanged: (val) => setState(() => selectedAccountId = val),
                   ),
                   const SizedBox(height: 15),
@@ -126,14 +121,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       border: OutlineInputBorder(),
                     ),
                     hint: const Text("Select Category"),
-                    items: filteredCategories
-                        .map(
-                          (cat) => DropdownMenuItem(
-                            value: cat.id,
-                            child: Text(cat.name),
-                          ),
-                        )
-                        .toList(),
+                    items: filteredCategories.map((cat) {
+                      return DropdownMenuItem(
+                        value: cat.id,
+                        child: Text(cat.name),
+                      );
+                    }).toList(),
                     onChanged: (val) =>
                         setState(() => selectedCategoryId = val),
                   ),
@@ -170,9 +163,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         if (selectedAccountId == null ||
                             selectedCategoryId == null ||
                             amountController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Please fill all fields"),
+                            ),
+                          );
                           return;
                         }
+
                         setState(() => isLoading = true);
+
                         double? amount = double.tryParse(amountController.text);
                         if (amount != null) {
                           bool success = await provider.addTransaction(
@@ -182,30 +182,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             amount: amount,
                             description: descriptionController.text,
                           );
+
                           if (context.mounted) {
                             Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  success ? "Transaction Added!" : "Failed",
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Transaction Added!"),
+                                  backgroundColor: Colors.green,
                                 ),
-                                backgroundColor: success
-                                    ? Colors.green
-                                    : Colors.red,
-                              ),
-                            );
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Failed to add transaction"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         }
                         setState(() => isLoading = false);
                       },
-                child: const Text("Add Transaction"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text("Add Transaction"),
               ),
             ],
           );
         },
       ),
     );
-    // END COPY PASTE LOGIC
+    // END COPY
   }
 
   @override
@@ -217,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () => _showAddTransactionDialog(context),
         backgroundColor: AppColors.accent,
         shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add_card_rounded, color: Colors.white),
       ),
       floatingActionButtonLocation: const FixedCenterDockedLocation(),
       bottomNavigationBar: Container(
@@ -240,8 +259,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: FaIcon(FontAwesomeIcons.moneyBillTransfer, size: 20),
-              label: 'Trans.',
+              // Ikon Chart Pie untuk Analysis
+              icon: FaIcon(FontAwesomeIcons.chartPie, size: 20),
+              label: 'Analysis',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.category_outlined),
@@ -250,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               label: 'Profile',
-            ), // <--- LABEL GANTI
+            ),
           ],
         ),
       ),

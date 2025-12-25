@@ -263,6 +263,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         itemBuilder: (context, index) {
                           final tx = transactions[index];
                           final isIncome = tx.type == 'Income';
+                          final categoryColor = CategoryIconHelper.getIconColor(
+                            tx.categoryName,
+                          );
 
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
@@ -285,16 +288,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
                               leading: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isIncome
-                                      ? AppColors.success.withOpacity(0.1)
-                                      : AppColors.error.withOpacity(0.1),
+                                  color: categoryColor,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   CategoryIconHelper.getIcon(tx.categoryName),
-                                  color: isIncome
-                                      ? AppColors.success
-                                      : AppColors.error,
+                                  color: Colors.white,
                                   size: 20,
                                 ),
                               ),
