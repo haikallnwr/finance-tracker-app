@@ -134,7 +134,7 @@ class _CategoryScreenState extends State<CategoryScreen>
     );
   }
 
-  // --- LOGIC HAPUS KATEGORI ---
+  // Haous kategori
   void _confirmDeleteCategory(
     BuildContext context,
     String categoryId,
@@ -196,11 +196,14 @@ class _CategoryScreenState extends State<CategoryScreen>
           backgroundColor: AppColors.background,
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            title: const Text(
-              'Categories',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
+            title: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+              child: Text(
+                'Categories',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             backgroundColor: Colors.white,
@@ -249,7 +252,7 @@ class _CategoryScreenState extends State<CategoryScreen>
       itemBuilder: (context, index) {
         final cat = categories[index];
         final iconColor = CategoryIconHelper.getIconColor(cat.name);
-        // Cek apakah kategori ini buatan user (bisa dihapus) atau default (tidak bisa)
+        // Cek apakah kategori ini buatan user
         bool isCustomCategory = cat.userId != null;
 
         return Card(
@@ -260,11 +263,11 @@ class _CategoryScreenState extends State<CategoryScreen>
           ),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: iconColor.withOpacity(0.1),
+              backgroundColor: iconColor,
               // PAKAI HELPER DI SINI
               child: Icon(
                 CategoryIconHelper.getIcon(cat.name),
-                color: iconColor,
+                color: Colors.white,
                 size: 20,
               ),
             ),

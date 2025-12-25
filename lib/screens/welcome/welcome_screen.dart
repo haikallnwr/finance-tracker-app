@@ -22,7 +22,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   final List<Map<String, dynamic>> _slides = [
     {
-      "title": "Welcome to Budget App",
+      "title": "Welcome to Finly",
       "subtitle": "Track your expenses and manage your budget effectively.",
       "image": "assets/images/welcome1.png",
     },
@@ -166,9 +166,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -180,31 +178,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                     ),
                     child: const Text(
-                      "Buat Akun Baru",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      "Saya Sudah Punya Akun",
+                      "Get Started",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -214,7 +188,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 60),
           ],
         ),
       ),

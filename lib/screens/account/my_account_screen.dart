@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -31,12 +33,7 @@ class MyAccountScreen extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, AccountModel account) {
     final nameController = TextEditingController(text: account.name);
-    String selectedType = 'Cash';
-    // Simple logic deteksi tipe awal
-    if (account.name.toLowerCase().contains('bank')) {
-      selectedType = 'Bank';
-    } else if (account.name.toLowerCase().contains('wallet'))
-      selectedType = 'E-wallet';
+    String selectedType = "Cash";
 
     showDialog(
       context: context,
@@ -51,12 +48,12 @@ class MyAccountScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              initialValue: selectedType,
-              items: [
-                'Cash',
-                'Bank',
-                'E-wallet',
-              ].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              value: selectedType,
+              items: const [
+                DropdownMenuItem(value: 'Cash', child: Text('Cash')),
+                DropdownMenuItem(value: 'Bank', child: Text('Bank')),
+                DropdownMenuItem(value: 'E-wallet', child: Text('E-wallet')),
+              ],
               onChanged: (v) => selectedType = v!,
               decoration: const InputDecoration(labelText: "Type"),
             ),
@@ -64,18 +61,21 @@ class MyAccountScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text("Cancel"),
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                await Provider.of<HomeProvider>(
-                  context,
-                  listen: false,
-                ).updateAccount(account.id, nameController.text, selectedType);
-                Navigator.pop(context);
-              }
+              if (nameController.text.isEmpty) return;
+
+              await Provider.of<HomeProvider>(
+                ctx,
+                listen: false,
+              ).updateAccount(account.id, nameController.text, selectedType);
+
+              if (!ctx.mounted) return;
+
+              Navigator.pop(ctx);
             },
             child: const Text("Update"),
           ),

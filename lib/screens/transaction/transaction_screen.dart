@@ -54,16 +54,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget build(BuildContext context) {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
-        // Ambil semua transaksi (kita akan filter manual di sini untuk fleksibilitas search)
-        // Provider filteredTransactions sudah difilter berdasarkan filterDays/Month di provider.
-        // Agar fitur "Search by Range" bekerja maksimal, idealnya kita ambil raw data _allTransactions
-        // TAPI, karena getter _allTransactions private, kita gunakan filteredTransactions
-        // dengan asumsi user mereset filter provider ke "All Time" (-1) saat masuk screen ini atau kita reset otomatis.
-
-        // Agar aman, kita minta provider set filter ke All Time (-1) saat pertama kali buka atau via tombol reset
-        // Namun, jika kita ubah state provider di build method akan error.
-        // Solusi UI: Kita filter list yang ada saat ini.
-
         List<dynamic> transactions = provider.filteredTransactions;
 
         // LOGIC FILTER TANGGAL MANUAL (SEARCH)

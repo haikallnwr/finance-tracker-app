@@ -72,19 +72,32 @@ class CategoryIconHelper {
     return Icons.category_rounded;
   }
 
-  // Helper untuk warna background ikon (Opsional, biar lebih cantik)
   static Color getIconColor(String categoryName) {
     final name = categoryName.toLowerCase();
-    if (name.contains('food')) return Color(0xFF7A5C3E);
-    if (name.contains('transport')) return Color(0xFF2F4A66);
-    if (name.contains('shop')) return Color(0xFF5A3F4D);
-    if (name.contains('bill')) return Color(0xFF3A3A3A);
-    if (name.contains('entertain')) return Color(0xFF3E3A5C);
-    if (name.contains('health')) return Color(0xFF3E5C4A);
-    if (name.contains('salary')) return Color(0xFF2F5C5A);
-    if (name.contains('bonus')) return Color(0xFF5C4A3E);
-    if (name.contains('gift')) return Color(0xFF5C3E4A);
-    if (name.contains('freelance')) return Color(0xFF4A5C3E);
+
+    if (name.contains('food')) return const Color(0xFF9B7B5E);
+
+    if (name.contains('transport')) return const Color(0xFF4F6B88);
+
+    if (name.contains('shop')) return const Color(0xFF8A5F6D);
+
+    if (name.contains('bill')) return const Color(0xFF6A6A6A);
+
+    if (name.contains('entertain'))
+      return const Color(0xFF6A66A3); // soft indigo
+
+    if (name.contains('health')) return const Color(0xFF5F8A75); // calm green
+
+    if (name.contains('salary')) return const Color(0xFF4F8F8B); // teal lembut
+
+    if (name.contains('bonus')) return const Color(0xFF8A6A5A); // clay brown
+
+    if (name.contains('gift'))
+      return const Color(0xFF8A5F78); // muted pink-purple
+
+    if (name.contains('freelance'))
+      return const Color(0xFF6F8F5F); // olive soft
+
     return AppColors.primary;
   }
 }

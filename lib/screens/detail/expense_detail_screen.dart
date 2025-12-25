@@ -207,7 +207,7 @@ class ExpenseDetailScreen extends StatelessWidget {
                         LinearProgressIndicator(
                           value: percentage,
                           backgroundColor: Colors.grey.shade100,
-                          color: _getColor(entry.key),
+                          color: CategoryIconHelper.getIconColor(entry.key),
                           minHeight: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -258,7 +258,7 @@ class ExpenseDetailScreen extends StatelessWidget {
     return data.entries.map((entry) {
       final percentage = (entry.value / total) * 100;
       return PieChartSectionData(
-        color: _getColor(entry.key),
+        color: CategoryIconHelper.getIconColor(entry.key),
         value: entry.value,
         title: '${percentage.toStringAsFixed(0)}%',
         radius: 60,
@@ -269,26 +269,5 @@ class ExpenseDetailScreen extends StatelessWidget {
         ),
       );
     }).toList();
-  }
-
-  Color _getColor(String category) {
-    switch (category) {
-      case "Food & Drink":
-        return Color(0xFF7A5C3E);
-      case "Transport":
-        return Color(0xFF2F4A66);
-      case "Shopping":
-        return Color(0xFF5A3F4D);
-      case "Bills":
-        return Color(0xFF3A3A3A);
-      case "Entertainment":
-        return Color(0xFF3E3A5C);
-      case "Health":
-        return Color(0xFF3E5C4A);
-      case "Salary":
-        return Color(0xFF2F5C5A);
-      default:
-        return Colors.grey;
-    }
   }
 }

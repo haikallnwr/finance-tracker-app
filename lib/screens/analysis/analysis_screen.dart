@@ -27,9 +27,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'Financial Analysis',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+          child: Text(
+            'Monthly Analysis',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -72,40 +75,35 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           Color moodColor;
 
           if (totalExpense > totalIncome) {
-            // Defisit (Living beyond means)
             moodTitle = "Living on the Edge? 💸";
             moodMessage =
                 "Uh-oh! Your expenses exceeded your income this month. It's time to review your budget and plug those spending leaks!";
             moodIcon = Icons.money_off_rounded;
-            moodColor = AppColors.error;
+            moodColor = const Color(0xFFB56A6A); // soft muted red
           } else if (savingRate > 0.30) {
-            // Excellent (>30% savings) - Financial Freedom path
-            moodTitle = "Financial Rockstar! 🚀";
+            moodTitle = "Financial Rockstar!";
             moodMessage =
                 "You're crushing it! Saving over 30% is impressive. Consider investing this surplus for your future goals.";
             moodIcon = Icons.rocket_launch_rounded;
-            moodColor = Colors.purpleAccent;
+            moodColor = const Color(0xFF5F8FA8); // muted blue (premium feel)
           } else if (savingRate >= 0.20) {
-            // Good (20-30% savings) - 50/30/20 Rule compliant
-            moodTitle = "Healthy & Balanced 🌱";
+            moodTitle = "Healthy & Balanced";
             moodMessage =
                 "Great job! You're saving a healthy amount (20%+). Keep building that emergency fund!";
             moodIcon = Icons.verified_user_outlined;
-            moodColor = AppColors.success;
+            moodColor = const Color(0xFF6F9E87); // calm green
           } else if (savingRate > 0) {
-            // Warning (0-20% savings) - Paycheck to paycheck risk
-            moodTitle = "Cutting it Close ⚠️";
+            moodTitle = "Cutting it Close";
             moodMessage =
                 "You're in the green, but barely. Try trimming some non-essential expenses to boost your savings buffer.";
             moodIcon = Icons.timelapse_rounded;
-            moodColor = Colors.orange;
+            moodColor = const Color(0xFFC2A15F); // soft amber
           } else {
-            // Break Even (0% savings)
-            moodTitle = "Just Getting By 😐";
+            moodTitle = "Just Getting By";
             moodMessage =
                 "You broke even this month. No savings means no safety net. Let's try to save at least 5% next month!";
             moodIcon = Icons.balance;
-            moodColor = Colors.blueGrey;
+            moodColor = const Color(0xFF7A8A99); // blue grey soft
           }
 
           moodCard = _buildIllustrationCard(
@@ -133,12 +131,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             String catMsg =
                 "Heads up! $topCat took a big bite (${percentage.toStringAsFixed(0)}%) out of your wallet. Is this aligning with your priorities?";
             IconData catIcon = Icons.pie_chart;
-            Color catColor = Colors.blueAccent;
+            Color catColor = Color(0xFF6B8FA3);
 
             if (percentage > 50) {
               catMsg =
                   "Whoa! Over half your budget went to $topCat. Unless it's rent/bills, you might want to rethink this spending.";
-              catColor = Colors.redAccent;
+              catColor = Color(0xFFB77A7A);
               catIcon = Icons.warning_rounded;
             }
 
@@ -197,32 +195,42 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             if (diff <= 0) {
               // LEBIH HEMAT
               trendCard = _buildIllustrationCard(
-                title: "Thrifty Mode On! 📉",
+                title: "Thrifty Mode On!",
                 message:
                     "High five! 🙌 You spent ${percentDiff.abs().toStringAsFixed(1)}% less than this time last month. Your wallet thanks you!",
                 icon: Icons.thumb_up_alt_rounded,
-                color: Colors.teal,
+                color: Color(0xFF6F9E87),
               );
             } else {
               // LEBIH BOROS
               trendCard = _buildIllustrationCard(
-                title: "Spending Alert! 📈",
+                title: "Spending Alert!",
                 message:
                     "Careful! Your spending is up ${percentDiff.toStringAsFixed(1)}% vs last month. Watch out for impulse buys!",
                 icon: Icons.trending_up,
-                color: Colors.deepOrangeAccent,
+                color: Color(0xFFC28A6B),
               );
             }
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  DateFormat('MMMM yyyy').format(now),
-                  style: TextStyle(color: Colors.grey[600]),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      DateFormat('MMMM yyyy').format(now),
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
 
@@ -253,7 +261,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     required String message,
     required IconData icon,
     required Color color,
-    bool isMain = false,
+    bool isMain = true,
   }) {
     return Container(
       width: double.infinity,
@@ -263,14 +271,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: AppColors.primary.withOpacity(0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
-        border: isMain
-            ? Border.all(color: color.withOpacity(0.3), width: 2)
-            : null,
       ),
       child: Column(
         children: [
@@ -278,12 +283,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           Container(
             height: isMain ? 120 : 80,
             width: isMain ? 120 : 80,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             // Ganti icon ini dengan [Image of <Illustration Name>] nanti
-            child: Icon(icon, size: isMain ? 60 : 40, color: color),
+            child: Icon(icon, size: isMain ? 60 : 40, color: Colors.white),
           ),
           const SizedBox(height: 16),
 
@@ -291,7 +293,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: color,
+              color: AppColors.primary,
               fontWeight: FontWeight.bold,
               fontSize: isMain ? 20 : 16,
             ),

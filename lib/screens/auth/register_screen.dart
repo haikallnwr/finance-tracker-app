@@ -26,15 +26,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Register Berhasil! Silakan Login'),
+          content: Text('Register Successful! Please login.'),
           backgroundColor: Colors.green,
         ),
       );
       Navigator.pop(context); // Kembali ke login
     } else if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Register Gagal')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Register failed. Please try again.')),
+      );
     }
   }
 

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
@@ -265,6 +267,13 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: const Center(
           child: Text(
@@ -286,6 +295,13 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -460,10 +476,17 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: const Center(
           child: Text(
-            "0% Pengeluaran",
+            "No expense data for this period",
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
@@ -475,6 +498,13 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -499,7 +529,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: _getColor(entry.key),
+                        color: CategoryIconHelper.getIconColor(entry.key),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -684,8 +714,8 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
-                blurRadius: 10,
+                color: AppColors.primary.withOpacity(0.08),
+                blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
             ],
@@ -1035,7 +1065,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return data.entries.map((entry) {
       final percentage = (entry.value / total) * 100;
       return PieChartSectionData(
-        color: _getColor(entry.key),
+        color: CategoryIconHelper.getIconColor(entry.key),
         value: entry.value,
         title: '${percentage.toStringAsFixed(0)}%',
         radius: 50,
@@ -1046,26 +1076,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }).toList();
-  }
-
-  Color _getColor(String category) {
-    switch (category) {
-      case "Food & Drink":
-        return Color(0xFF7A5C3E);
-      case "Transport":
-        return Color(0xFF2F4A66);
-      case "Shopping":
-        return Color(0xFF5A3F4D);
-      case "Bills":
-        return Color(0xFF3A3A3A);
-      case "Entertainment":
-        return Color(0xFF3E3A5C);
-      case "Health":
-        return Color(0xFF3E5C4A);
-      case "Salary":
-        return Color(0xFF2F5C5A);
-      default:
-        return Colors.grey;
-    }
   }
 }

@@ -30,7 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login Gagal, periksa email/password')),
+        const SnackBar(
+          content: Text('Login failed. Please check your credentials.'),
+        ),
       );
     }
   }
@@ -55,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Welcome Back!',
+                'Welcome!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
