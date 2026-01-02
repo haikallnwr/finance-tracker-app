@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +33,7 @@ class TrendDetailScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Balance Trend Detail',
+          'Balance Trend Details',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -41,15 +43,30 @@ class TrendDetailScreen extends StatelessWidget {
       body: Consumer<HomeProvider>(
         builder: (context, provider, child) {
           double averageExpense = 0;
-          if (provider.trendSpots.isNotEmpty && provider.filterDays > 0) {
-            double total = provider.trendSpots.fold(
-              0,
-              (sum, item) => sum + item.y,
+
+          if (provider.filterDays > 0) {
+            final now = DateTime.now();
+            final startDate = now.subtract(
+              Duration(days: provider.filterDays - 1),
             );
-            averageExpense = total / provider.filterDays;
+
+            // Filter expense transaksi sesuai range hari
+            final expenseTxs = provider.allTransactions.where((tx) {
+              final txDate = tx.date.toLocal();
+              return tx.type == 'Expense' &&
+                  txDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
+                  txDate.isBefore(now.add(const Duration(days: 1)));
+            }).toList();
+
+            double totalExpense = 0;
+            for (var tx in expenseTxs) {
+              totalExpense += tx.amount;
+            }
+
+            averageExpense = totalExpense / provider.filterDays;
           }
 
-          // --- LOGIC DROPDOWN FILTER (CONSISTENT WITH HOME) ---
+          // dropdown filter days logic
           final List<int> longTermOptions = [90, 180, 365]; // Removed -1
           bool isLongTermSelected = longTermOptions.contains(
             provider.filterDays,

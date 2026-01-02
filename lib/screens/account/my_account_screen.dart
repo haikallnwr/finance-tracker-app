@@ -146,12 +146,12 @@ class MyAccountScreen extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      icon: const Icon(Icons.edit, color: AppColors.accent),
                       onPressed: () => _showEditDialog(context, account),
                     ),
                     if (!account.isDefault)
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: const Icon(Icons.delete, color: AppColors.error),
                         onPressed: () async {
                           bool confirm = await showDialog(
                             context: context,
@@ -169,7 +169,7 @@ class MyAccountScreen extends StatelessWidget {
                                   onPressed: () => Navigator.pop(ctx, true),
                                   child: const Text(
                                     "Delete",
-                                    style: TextStyle(color: Colors.red),
+                                    style: TextStyle(color: AppColors.error),
                                   ),
                                 ),
                               ],

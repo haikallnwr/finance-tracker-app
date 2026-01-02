@@ -83,8 +83,9 @@ class CategoryIconHelper {
 
     if (name.contains('bill')) return const Color(0xFF6A6A6A);
 
-    if (name.contains('entertain'))
+    if (name.contains('entertain')) {
       return const Color(0xFF6A66A3); // soft indigo
+    }
 
     if (name.contains('health')) return const Color(0xFF5F8A75); // calm green
 
@@ -92,11 +93,13 @@ class CategoryIconHelper {
 
     if (name.contains('bonus')) return const Color(0xFF8A6A5A); // clay brown
 
-    if (name.contains('gift'))
+    if (name.contains('gift')) {
       return const Color(0xFF8A5F78); // muted pink-purple
+    }
 
-    if (name.contains('freelance'))
+    if (name.contains('freelance')) {
       return const Color(0xFF6F8F5F); // olive soft
+    }
 
     return AppColors.primary;
   }

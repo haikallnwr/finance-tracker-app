@@ -1,9 +1,10 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 
 import 'package:budget_app/core/constants.dart';
 import 'package:flutter/material.dart';
 import '../auth/login_screen.dart';
-import '../auth/register_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class WelcomeScreen extends StatefulWidget {

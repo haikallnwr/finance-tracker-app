@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/constants.dart';
 import 'providers/auth_provider.dart';
-import 'screens/auth/login_screen.dart';
+
 import 'providers/home_provider.dart';
 
 void main() {

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -43,11 +45,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           // --- LOGIKA PERHITUNGAN ANALISIS (CLIENT SIDE) ---
 
           final now = DateTime.now();
-          final currentMonthTxs = provider.allTransactions
-              .where(
-                (tx) => tx.date.month == now.month && tx.date.year == now.year,
-              )
-              .toList();
+
+          // 1. Filter Data Bulan Ini
+          // Menggunakan toLocal() untuk memastikan zona waktu sesuai dengan 'now'
+          final currentMonthTxs = provider.allTransactions.where((tx) {
+            final txDate = tx.date.toLocal();
+            return txDate.month == now.month && txDate.year == now.year;
+          }).toList();
 
           double totalIncome = 0;
           double totalExpense = 0;
@@ -63,7 +67,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             }
           }
 
-          // --- 1. MOOD KEUANGAN (Financial Sentiment) ---
+          // Financial Mood Calculation
           double cashflow = totalIncome - totalExpense;
           double savingRate = totalIncome > 0 ? (cashflow / totalIncome) : 0;
 
@@ -79,31 +83,31 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             moodMessage =
                 "Uh-oh! Your expenses exceeded your income this month. It's time to review your budget and plug those spending leaks!";
             moodIcon = Icons.money_off_rounded;
-            moodColor = const Color(0xFFB56A6A); // soft muted red
+            moodColor = const Color(0xFFB56A6A);
           } else if (savingRate > 0.30) {
             moodTitle = "Financial Rockstar!";
             moodMessage =
                 "You're crushing it! Saving over 30% is impressive. Consider investing this surplus for your future goals.";
             moodIcon = Icons.rocket_launch_rounded;
-            moodColor = const Color(0xFF5F8FA8); // muted blue (premium feel)
+            moodColor = const Color(0xFF5F8FA8);
           } else if (savingRate >= 0.20) {
             moodTitle = "Healthy & Balanced";
             moodMessage =
                 "Great job! You're saving a healthy amount (20%+). Keep building that emergency fund!";
             moodIcon = Icons.verified_user_outlined;
-            moodColor = const Color(0xFF6F9E87); // calm green
+            moodColor = const Color(0xFF6F9E87);
           } else if (savingRate > 0) {
             moodTitle = "Cutting it Close";
             moodMessage =
                 "You're in the green, but barely. Try trimming some non-essential expenses to boost your savings buffer.";
             moodIcon = Icons.timelapse_rounded;
-            moodColor = const Color(0xFFC2A15F); // soft amber
+            moodColor = const Color(0xFFC2A15F);
           } else {
             moodTitle = "Just Getting By";
             moodMessage =
                 "You broke even this month. No savings means no safety net. Let's try to save at least 5% next month!";
             moodIcon = Icons.balance;
-            moodColor = const Color(0xFF7A8A99); // blue grey soft
+            moodColor = const Color(0xFF7A8A99);
           }
 
           moodCard = _buildIllustrationCard(
@@ -114,7 +118,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             isMain: true,
           );
 
-          // --- 2. DETEKTIF KATEGORI (Top Spending) ---
+          //Top Category Expense
           Widget topCategoryCard = const SizedBox();
           if (categoryExpense.isNotEmpty) {
             var sortedKeys = categoryExpense.keys.toList(growable: false)
@@ -148,43 +152,38 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             );
           }
 
-          // --- 3. PERBANDINGAN TREN (vs Bulan Lalu) ---
-          // ... (Logic tanggal tetap sama) ...
-          final startLastMonth = DateTime(now.year, now.month - 1, 1);
-          int lastDayOfLastMonth = DateTime(now.year, now.month, 0).day;
-          int compareDay = now.day > lastDayOfLastMonth
-              ? lastDayOfLastMonth
-              : now.day;
-          final limitLastMonth = DateTime(
-            now.year,
-            now.month - 1,
-            compareDay,
-            23,
-            59,
-            59,
+          // Trend Analysis with Last Month Comparison
+
+          // Tentukan bulan & tahun lalu
+          final lastMonthDate = DateTime(now.year, now.month - 1);
+
+          // Ambil semua transaksi bulan lalu
+          final lastMonthTxs = provider.allTransactions.where((tx) {
+            final txDate = tx.date.toLocal();
+            return txDate.month == lastMonthDate.month &&
+                txDate.year == lastMonthDate.year;
+          }).toList();
+
+          // Cek apakah ada expense bulan lalu
+          final hasExpenseLastMonth = lastMonthTxs.any(
+            (tx) => tx.type == 'Expense',
           );
 
-          final lastMonthTxs = provider.allTransactions
-              .where(
-                (tx) =>
-                    tx.date.isAfter(
-                      startLastMonth.subtract(const Duration(seconds: 1)),
-                    ) &&
-                    tx.date.isBefore(limitLastMonth),
-              )
-              .toList();
-
+          // Hitung total expense bulan lalu
           double totalExpenseLastMonth = 0;
           for (var tx in lastMonthTxs) {
-            if (tx.type == 'Expense') totalExpenseLastMonth += tx.amount;
+            if (tx.type == 'Expense') {
+              totalExpenseLastMonth += tx.amount;
+            }
           }
 
           Widget trendCard;
-          if (totalExpenseLastMonth == 0) {
+
+          if (!hasExpenseLastMonth) {
             trendCard = _buildIllustrationCard(
               title: "Not Enough Data",
               message:
-                  "We need last month's data to compare your progress. Keep tracking!",
+                  "We need last month's expense data to compare your progress. Keep tracking!",
               icon: Icons.analytics_outlined,
               color: Colors.grey,
             );
@@ -193,22 +192,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             double percentDiff = (diff / totalExpenseLastMonth) * 100;
 
             if (diff <= 0) {
-              // LEBIH HEMAT
+              // Lebih hemat
               trendCard = _buildIllustrationCard(
                 title: "Thrifty Mode On!",
                 message:
-                    "High five! 🙌 You spent ${percentDiff.abs().toStringAsFixed(1)}% less than this time last month. Your wallet thanks you!",
+                    "Nice! You spent ${percentDiff.abs().toStringAsFixed(1)}% less than last month. Keep it up!",
                 icon: Icons.thumb_up_alt_rounded,
-                color: Color(0xFF6F9E87),
+                color: const Color(0xFF6F9E87),
               );
             } else {
-              // LEBIH BOROS
+              // Lebih boros
               trendCard = _buildIllustrationCard(
                 title: "Spending Alert!",
                 message:
-                    "Careful! Your spending is up ${percentDiff.toStringAsFixed(1)}% vs last month. Watch out for impulse buys!",
+                    "Careful! Your spending increased by ${percentDiff.toStringAsFixed(1)}% compared to last month.",
                 icon: Icons.trending_up,
-                color: Color(0xFFC28A6B),
+                color: const Color(0xFFC28A6B),
               );
             }
           }
@@ -255,7 +254,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
-  // --- WIDGET KARTU ILUSTRASI ---
+  // widget card
   Widget _buildIllustrationCard({
     required String title,
     required String message,
