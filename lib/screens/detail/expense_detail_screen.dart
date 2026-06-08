@@ -27,13 +27,11 @@ class ExpenseDetailScreen extends StatelessWidget {
             ..sort((a, b) => b.value.compareTo(a.value));
           final top5 = sortedEntries.take(5).toList();
 
-          // --- LOGIC DROPDOWN FILTER ---
           final List<int> longTermOptions = [90, 180, 365];
           bool isLongTermSelected = longTermOptions.contains(
             provider.filterDays,
           );
 
-          // Helper untuk label
           String getLabel(int days) {
             if (days == 90) return "3 Months";
             if (days == 180) return "6 Months";
@@ -51,7 +49,6 @@ class ExpenseDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Filter Waktu
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -61,7 +58,6 @@ class ExpenseDetailScreen extends StatelessWidget {
                       _filterChip("30 Days", 30, provider),
                       const SizedBox(width: 8),
 
-                      // DROPDOWN FILTER
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,

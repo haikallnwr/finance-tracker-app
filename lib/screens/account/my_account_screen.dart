@@ -10,7 +10,6 @@ import '../../models/account_model.dart';
 class MyAccountScreen extends StatelessWidget {
   const MyAccountScreen({super.key});
 
-  // Helper Ikon (Sama seperti di TrendDetail)
   IconData _getAccountIcon(String accountName) {
     final name = accountName.toLowerCase();
     if (name.contains("cash")) {
@@ -116,7 +115,7 @@ class MyAccountScreen extends StatelessWidget {
                         color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      // MENGGUNAKAN HELPER IKON
+
                       child: Icon(
                         _getAccountIcon(account.name),
                         color: AppColors.primary,

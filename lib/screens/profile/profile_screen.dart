@@ -6,8 +6,8 @@ import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../account/my_account_screen.dart';
 import '../auth/login_screen.dart';
-import 'edit_profile_screen.dart'; // Import halaman Edit Profile
-import 'change_password_screen.dart'; // Import halaman Change Password
+import 'edit_profile_screen.dart';
+import 'change_password_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -30,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            // Avatar & Info User
+
             Center(
               child: Column(
                 children: [
@@ -60,7 +60,6 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
 
-            // Menu: Edit Profile
             _buildMenuItem(
               context,
               icon: Icons.edit,
@@ -73,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
                 );
               },
             ),
-            // Menu: Change Password
+
             _buildMenuItem(
               context,
               icon: Icons.lock,
@@ -88,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                 );
               },
             ),
-            // Menu: My Accounts
+
             _buildMenuItem(
               context,
               icon: Icons.account_balance_wallet,
@@ -101,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
                 );
               },
             ),
-            // Menu: Logout
+
             _buildMenuItem(
               context,
               icon: Icons.logout,

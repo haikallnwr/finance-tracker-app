@@ -50,7 +50,6 @@ class TrendDetailScreen extends StatelessWidget {
               Duration(days: provider.filterDays - 1),
             );
 
-            // Filter expense transaksi sesuai range hari
             final expenseTxs = provider.allTransactions.where((tx) {
               final txDate = tx.date.toLocal();
               return tx.type == 'Expense' &&
@@ -66,8 +65,7 @@ class TrendDetailScreen extends StatelessWidget {
             averageExpense = totalExpense / provider.filterDays;
           }
 
-          // dropdown filter days logic
-          final List<int> longTermOptions = [90, 180, 365]; // Removed -1
+          final List<int> longTermOptions = [90, 180, 365];
           bool isLongTermSelected = longTermOptions.contains(
             provider.filterDays,
           );
@@ -89,7 +87,6 @@ class TrendDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Filter Waktu
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -99,7 +96,6 @@ class TrendDetailScreen extends StatelessWidget {
                       _filterChip("30 Day", 30, provider),
                       const SizedBox(width: 8),
 
-                      // DROPDOWN FILTER
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -142,7 +138,6 @@ class TrendDetailScreen extends StatelessWidget {
                             dropdownColor: Colors.white,
                             style: const TextStyle(color: Colors.black),
 
-                            // Builder untuk Tampilan Tombol saat TERTUTUP -> PUTIH
                             selectedItemBuilder: (BuildContext context) {
                               return longTermOptions.map<Widget>((int value) {
                                 return Center(

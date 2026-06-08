@@ -78,7 +78,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           children: [
             const Spacer(),
 
-            //slider
             SizedBox(
               height: 400,
               child: PageView.builder(
@@ -104,7 +103,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: Image.asset(
-                            slide['image'], // Icon berubah sesuai data
+                            slide['image'],
                             width: 100,
                             height: 100,
                           ),
@@ -143,7 +142,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   height: 8,
-                  // Jika index ini adalah halaman aktif, lebarkan titiknya
+
                   width: _currentPage == index ? 24 : 8,
                   decoration: BoxDecoration(
                     color: _currentPage == index
@@ -157,7 +156,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
             const Spacer(),
 
-            // --- BAGIAN 3: TOMBOL ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(

@@ -13,30 +13,25 @@ import '../models/category_model.dart';
 class HomeProvider with ChangeNotifier {
   bool _isLoading = true;
 
-  // Data Summary
   double _displayedBalance = 0;
   double _displayedIncome = 0;
   double _displayedExpense = 0;
 
-  // Data Lists
   List<TransactionModel> _allTransactions = [];
   List<AccountModel> _accounts = [];
   List<CategoryModel> _categories = [];
   Map<String, double> _chartData = {};
 
-  // Processed Data
   List<TransactionModel> _recentTransactions = [];
   List<TransactionModel> _filteredTransactions = [];
   List<FlSpot> _trendSpots = [];
   double _maxTrendValue = 100;
   double _minTrendValue = 0;
 
-  // Filter State
   String? _selectedAccountId;
-  int _filterDays = 30; // 7, 30, 90, 180, 365, -1
-  DateTime? _selectedMonth; // Filter Bulan Spesifik
+  int _filterDays = 30;
+  DateTime? _selectedMonth;
 
-  // Getters
   bool get isLoading => _isLoading;
   double get totalBalance => _displayedBalance;
   double get totalIncome => _displayedIncome;
@@ -73,7 +68,6 @@ class HomeProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Fetch Accounts
       final accountRes = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/account'),
         headers: {'Authorization': 'Bearer $token'},
@@ -83,7 +77,6 @@ class HomeProvider with ChangeNotifier {
         _accounts = accJson.map((json) => AccountModel.fromJson(json)).toList();
       }
 
-      // 2. Fetch Transactions
       final transRes = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/transactions'),
         headers: {'Authorization': 'Bearer $token'},
@@ -93,11 +86,10 @@ class HomeProvider with ChangeNotifier {
         _allTransactions = transJson
             .map((json) => TransactionModel.fromJson(json))
             .toList();
-        // PENTING: Sort descending (terbaru di atas) untuk memudahkan perhitungan mundur
+
         _allTransactions.sort((a, b) => b.date.compareTo(a.date));
       }
 
-      // 3. Fetch Categories
       final catRes = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/category'),
         headers: {'Authorization': 'Bearer $token'},
@@ -118,7 +110,6 @@ class HomeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // --- FILTER ACTIONS ---
   void selectAccount(String? accountId) {
     _selectedAccountId = accountId;
     _recalculateData();
@@ -134,7 +125,7 @@ class HomeProvider with ChangeNotifier {
 
   void setFilterMonth(DateTime month) {
     _selectedMonth = month;
-    _filterDays = -2; // Kode khusus mode bulan
+    _filterDays = -2;
     _recalculateData();
     notifyListeners();
   }
@@ -147,8 +138,6 @@ class HomeProvider with ChangeNotifier {
     _recentTransactions = [];
     _filteredTransactions = [];
 
-    // 1. Hitung Saldo Total Saat Ini (Real-time dari akun)
-    // Ini akan menjadi titik awal (hari ini) untuk perhitungan mundur grafik
     if (_selectedAccountId == null) {
       _displayedBalance = _accounts.fold(
         0,
@@ -164,7 +153,6 @@ class HomeProvider with ChangeNotifier {
       }
     }
 
-    // --- SETUP FILTER & HITUNG SUMMARY DATA ---
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
 
@@ -173,7 +161,6 @@ class HomeProvider with ChangeNotifier {
       startDate = today.subtract(Duration(days: _filterDays - 1));
     }
 
-    // List transaksi khusus untuk perhitungan grafik (hanya akun terpilih)
     List<TransactionModel> accountSpecificTransactions = [];
 
     for (var tx in _allTransactions) {
@@ -181,10 +168,8 @@ class HomeProvider with ChangeNotifier {
           _selectedAccountId == null || tx.accountName == selectedAccountName;
 
       if (matchAccount) {
-        // Simpan untuk perhitungan grafik nanti
         accountSpecificTransactions.add(tx);
 
-        // --- Filter Tanggal untuk Summary Income/Expense & List Transaksi ---
         DateTime txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
         bool matchDate = true;
 
@@ -203,7 +188,7 @@ class HomeProvider with ChangeNotifier {
             _displayedIncome += tx.amount;
           } else {
             _displayedExpense += tx.amount;
-            // Pie Chart Data (Hanya Expense)
+
             if (_chartData.containsKey(tx.categoryName)) {
               _chartData[tx.categoryName] =
                   _chartData[tx.categoryName]! + tx.amount;
@@ -217,73 +202,49 @@ class HomeProvider with ChangeNotifier {
 
     _recentTransactions = _filteredTransactions.take(5).toList();
 
-    // --- 3. GENERATE BALANCE TREND (LOGIKA MUNDUR) ---
-    // Kita mulai dari _displayedBalance (Saldo Hari Ini) dan mundur ke belakang.
-    // Rumus Mundur: Saldo Kemarin = Saldo Hari Ini - Income Hari Ini + Expense Hari Ini
-
     _trendSpots = [];
     double runningBalance = _displayedBalance;
 
-    // Inisialisasi Min/Max dengan saldo saat ini
     double tempMin = runningBalance;
     double tempMax = runningBalance;
 
     if (_selectedMonth == null) {
-      int range = (_filterDays == -1)
-          ? 30
-          : _filterDays; // Default 30 jika All Time untuk grafik
+      int range = (_filterDays == -1) ? 30 : _filterDays;
       if (_filterDays == -2) range = 30;
 
-      int txIndex = 0; // Pointer untuk list transaksi (sudah sort desc/terbaru)
+      int txIndex = 0;
 
-      // Loop dari Hari Ini (0) mundur ke masa lalu (range-1)
       for (int i = 0; i < range; i++) {
-        // Tanggal yang sedang dicek
         DateTime targetDate = today.subtract(Duration(days: i));
 
-        // Simpan titik grafik untuk hari ini (Saldo Akhir Hari tersebut)
-        // X = range - 1 - i.
-        // i=0 (Hari ini) -> X paling kanan.
-        // i=range-1 (Hari terlama) -> X paling kiri (0).
         double xPos = (range - 1 - i).toDouble();
         _trendSpots.add(FlSpot(xPos, runningBalance));
 
-        // Update Min/Max
         if (runningBalance > tempMax) tempMax = runningBalance;
         if (runningBalance < tempMin) tempMin = runningBalance;
 
-        // Proses transaksi pada tanggal targetDate untuk mengembalikan saldo ke awal hari (atau akhir hari kemarin)
-        // Karena list transaksi urut dari Baru ke Lama, kita tinggal cek index selanjutnya
         while (txIndex < accountSpecificTransactions.length) {
           TransactionModel tx = accountSpecificTransactions[txIndex];
           DateTime txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
 
-          // Jika transaksi lebih baru dari targetDate (masa depan), skip (seharusnya tidak terjadi jika logic benar)
           if (txDate.isAfter(targetDate)) {
             txIndex++;
             continue;
           }
 
-          // Jika transaksi terjadi pada targetDate, kita "batalkan" efeknya untuk mendapatkan saldo sebelum transaksi
           if (txDate.isAtSameMomentAs(targetDate)) {
             if (tx.type == 'Income') {
-              runningBalance -= tx.amount; // Kurangi Income untuk mundur
+              runningBalance -= tx.amount;
             } else {
-              runningBalance += tx.amount; // Tambah Expense untuk mundur
+              runningBalance += tx.amount;
             }
             txIndex++;
           } else {
-            // Transaksi lebih tua dari targetDate, berhenti loop transaksi hari ini
             break;
           }
         }
       }
 
-      // Karena kita add dari kanan ke kiri (terbaru ke terlama), kita perlu reverse urutannya untuk FlChart?
-      // Tidak perlu reverse listnya karena kita sudah hitung xPos dengan benar:
-      // i=0 (Hari ini), xPos=Max -> Add pertama.
-      // i=Max (Lama), xPos=0 -> Add terakhir.
-      // FlChart biasanya pintar mengurutkan, tapi untuk amannya kita sort spots berdasarkan X.
       _trendSpots.sort((a, b) => a.x.compareTo(b.x));
     }
 
@@ -291,7 +252,6 @@ class HomeProvider with ChangeNotifier {
     _minTrendValue = tempMin;
   }
 
-  // --- CRUD FUNCTIONS (Sama) ---
   Future<bool> addAccount(String name, String type, double initBalance) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -430,7 +390,7 @@ class HomeProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        await fetchData(); // Refresh list kategori
+        await fetchData();
         return true;
       }
       return false;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants.dart'; // Import Helper
+import '../../core/constants.dart';
 import '../../providers/home_provider.dart';
 import '../../models/category_model.dart';
 
@@ -27,12 +27,9 @@ class _CategoryScreenState extends State<CategoryScreen>
     super.dispose();
   }
 
-  // --- LOGIC TAMBAH KATEGORI ---
   void _showAddCategoryDialog(BuildContext context) {
     final nameController = TextEditingController();
-    String type = _tabController.index == 0
-        ? 'Expense'
-        : 'Income'; // Default sesuai tab aktif
+    String type = _tabController.index == 0 ? 'Expense' : 'Income';
     bool isLoading = false;
 
     showDialog(
@@ -134,7 +131,6 @@ class _CategoryScreenState extends State<CategoryScreen>
     );
   }
 
-  // Haous kategori
   void _confirmDeleteCategory(
     BuildContext context,
     String categoryId,
@@ -152,7 +148,7 @@ class _CategoryScreenState extends State<CategoryScreen>
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Tutup dialog
+              Navigator.pop(context);
               final provider = Provider.of<HomeProvider>(
                 context,
                 listen: false,
@@ -252,7 +248,7 @@ class _CategoryScreenState extends State<CategoryScreen>
       itemBuilder: (context, index) {
         final cat = categories[index];
         final iconColor = CategoryIconHelper.getIconColor(cat.name);
-        // Cek apakah kategori ini buatan user
+
         bool isCustomCategory = cat.userId != null;
 
         return Card(
@@ -264,7 +260,7 @@ class _CategoryScreenState extends State<CategoryScreen>
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: iconColor,
-              // PAKAI HELPER DI SINI
+
               child: Icon(
                 CategoryIconHelper.getIcon(cat.name),
                 color: Colors.white,
@@ -275,14 +271,14 @@ class _CategoryScreenState extends State<CategoryScreen>
               cat.name,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            // Tombol Hapus hanya muncul jika kategori custom
+
             trailing: isCustomCategory
                 ? IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.grey),
                     onPressed: () =>
                         _confirmDeleteCategory(context, cat.id, cat.name),
                   )
-                : null, // Kategori default tidak ada tombol hapus
+                : null,
           ),
         );
       },

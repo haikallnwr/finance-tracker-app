@@ -14,7 +14,6 @@ class AnalysisScreen extends StatefulWidget {
 }
 
 class _AnalysisScreenState extends State<AnalysisScreen> {
-  // Helper Format Rupiah
   String formatRupiah(double amount) {
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
@@ -42,12 +41,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
       body: Consumer<HomeProvider>(
         builder: (context, provider, child) {
-          // --- LOGIKA PERHITUNGAN ANALISIS (CLIENT SIDE) ---
-
           final now = DateTime.now();
 
-          // 1. Filter Data Bulan Ini
-          // Menggunakan toLocal() untuk memastikan zona waktu sesuai dengan 'now'
           final currentMonthTxs = provider.allTransactions.where((tx) {
             final txDate = tx.date.toLocal();
             return txDate.month == now.month && txDate.year == now.year;
@@ -67,12 +62,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             }
           }
 
-          // Financial Mood Calculation
           double cashflow = totalIncome - totalExpense;
           double savingRate = totalIncome > 0 ? (cashflow / totalIncome) : 0;
 
           Widget moodCard;
-          // Placeholder Ilustrasi
+
           IconData moodIcon;
           String moodTitle;
           String moodMessage;
@@ -118,7 +112,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             isMain: true,
           );
 
-          //Top Category Expense
           Widget topCategoryCard = const SizedBox();
           if (categoryExpense.isNotEmpty) {
             var sortedKeys = categoryExpense.keys.toList(growable: false)
@@ -152,24 +145,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             );
           }
 
-          // Trend Analysis with Last Month Comparison
-
-          // Tentukan bulan & tahun lalu
           final lastMonthDate = DateTime(now.year, now.month - 1);
 
-          // Ambil semua transaksi bulan lalu
           final lastMonthTxs = provider.allTransactions.where((tx) {
             final txDate = tx.date.toLocal();
             return txDate.month == lastMonthDate.month &&
                 txDate.year == lastMonthDate.year;
           }).toList();
 
-          // Cek apakah ada expense bulan lalu
           final hasExpenseLastMonth = lastMonthTxs.any(
             (tx) => tx.type == 'Expense',
           );
 
-          // Hitung total expense bulan lalu
           double totalExpenseLastMonth = 0;
           for (var tx in lastMonthTxs) {
             if (tx.type == 'Expense') {
@@ -192,7 +179,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             double percentDiff = (diff / totalExpenseLastMonth) * 100;
 
             if (diff <= 0) {
-              // Lebih hemat
               trendCard = _buildIllustrationCard(
                 title: "Thrifty Mode On!",
                 message:
@@ -201,7 +187,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 color: const Color(0xFF6F9E87),
               );
             } else {
-              // Lebih boros
               trendCard = _buildIllustrationCard(
                 title: "Spending Alert!",
                 message:
@@ -233,17 +218,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // 1. Mood Card
                 moodCard,
                 const SizedBox(height: 20),
 
-                // 2. Top Category
                 if (categoryExpense.isNotEmpty) ...[
                   topCategoryCard,
                   const SizedBox(height: 20),
                 ],
 
-                // 3. Trend Analysis
                 trendCard,
                 const SizedBox(height: 30),
               ],
@@ -254,7 +236,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
   }
 
-  // widget card
   Widget _buildIllustrationCard({
     required String title,
     required String message,
@@ -278,12 +259,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       ),
       child: Column(
         children: [
-          // AREA GAMBAR ILUSTRASI (Placeholder)
           Container(
             height: isMain ? 120 : 80,
             width: isMain ? 120 : 80,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            // Ganti icon ini dengan [Image of <Illustration Name>] nanti
+
             child: Icon(icon, size: isMain ? 60 : 40, color: Colors.white),
           ),
           const SizedBox(height: 16),

@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../providers/home_provider.dart';
 import '../home/home_screen.dart';
-import '../analysis/analysis_screen.dart'; // Screen Baru
+import '../analysis/analysis_screen.dart';
 import '../category/category_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -28,8 +28,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ];
 
   void _showAddTransactionDialog(BuildContext context) {
-    // ... (Logic Add Transaction SAMA SEPERTI SEBELUMNYA, Copy Paste Saja) ...
-    // START COPY
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
     String type = 'Expense';
@@ -226,7 +224,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
     );
-    // END COPY
   }
 
   @override
@@ -261,7 +258,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              // Ikon Chart Pie untuk Analysis
               icon: FaIcon(FontAwesomeIcons.chartPie, size: 20),
               label: 'Analysis',
             ),

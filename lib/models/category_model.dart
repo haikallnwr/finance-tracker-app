@@ -1,7 +1,7 @@
 class CategoryModel {
   final String id;
   final String name;
-  final String type; // "Income" atau "Expense"
+  final String type;
   final String? userId;
 
   CategoryModel({

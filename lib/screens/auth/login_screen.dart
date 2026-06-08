@@ -73,7 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Input Email
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -86,7 +85,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Input Password
               TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -100,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Login Button
               ElevatedButton(
                 onPressed: isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
@@ -123,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Link to Register
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

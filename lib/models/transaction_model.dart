@@ -1,6 +1,6 @@
 class TransactionModel {
   final String id;
-  final String type; // "Income" atau "Expense"
+  final String type;
   final double amount;
   final String categoryName;
   final String accountName;
@@ -22,11 +22,11 @@ class TransactionModel {
       id: json['_id'],
       type: json['type'],
       amount: (json['amount'] as num).toDouble(),
-      // Backend melakukan .populate('category_id'), jadi ini berbentuk Object
+
       categoryName: json['category_id'] != null
           ? json['category_id']['name']
           : 'Uncategorized',
-      // Backend melakukan .populate('account_id')
+
       accountName: json['account_id'] != null
           ? json['account_id']['name']
           : 'Unknown Account',

@@ -30,7 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pop(context); // Kembali ke login
+      Navigator.pop(context);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Register failed. Please try again.')),

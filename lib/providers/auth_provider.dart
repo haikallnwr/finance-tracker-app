@@ -17,7 +17,6 @@ class AuthProvider with ChangeNotifier {
   String? get email => _email;
   bool get isAuthenticated => _token != null;
 
-  // --- REGISTER ---
   Future<bool> register(String username, String email, String password) async {
     _setLoading(true);
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/register');
@@ -45,7 +44,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // --- LOGIN ---
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/login');
@@ -60,7 +58,7 @@ class AuthProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _token = data['token'];
-        // Sesuai controller auth: user ada di dalam object 'user'
+
         _username = data['user']['username'];
         _email = data['user']['email'];
 
@@ -82,7 +80,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // --- LOGOUT ---
   void logout() async {
     _token = null;
     _username = null;
@@ -92,10 +89,9 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // --- UPDATE PROFILE (Sesuai Controller User Kamu) ---
   Future<bool> updateProfile(String newUsername, String newEmail) async {
     _setLoading(true);
-    // Route: /api/user/updateProfile
+
     final url = Uri.parse('${ApiConstants.baseUrl}/user/updateProfile');
 
     if (_token == null) {
@@ -115,7 +111,7 @@ class AuthProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Sesuai userController.updateUser: res.json({ update })
+
         final updatedUser = data['update'];
 
         if (updatedUser != null) {
@@ -141,10 +137,9 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // --- CHANGE PASSWORD (Sesuai Controller Auth Kamu) ---
   Future<bool> changePassword(String oldPassword, String newPassword) async {
     _setLoading(true);
-    // Route: /api/auth/changePassword
+
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/changePassword');
 
     if (_token == null) {
@@ -166,7 +161,7 @@ class AuthProvider with ChangeNotifier {
       );
 
       _setLoading(false);
-      // Controller auth mengembalikan 200 OK jika sukses
+
       if (response.statusCode == 200) {
         return true;
       } else {

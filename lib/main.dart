@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
-        textTheme: GoogleFonts.poppinsTextTheme(), // Menggunakan Font Poppins
+        textTheme: GoogleFonts.poppinsTextTheme(),
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.accent),
         useMaterial3: true,
       ),

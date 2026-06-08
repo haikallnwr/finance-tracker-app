@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Pastikan sudah diinstall
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AppColors {
   static const Color primary = Color(0xFF2A2D3E);
@@ -17,12 +17,10 @@ class ApiConstants {
   static const String baseUrl = "http://10.0.2.2:3000/api";
 }
 
-// icon
 class CategoryIconHelper {
   static IconData getIcon(String categoryName) {
     final name = categoryName.toLowerCase();
 
-    // Logic pemetaan nama ke Ikon
     if (name.contains('food') || name.contains('makan')) {
       return Icons.restaurant_rounded;
     }
@@ -68,7 +66,6 @@ class CategoryIconHelper {
       return FontAwesomeIcons.graduationCap;
     }
 
-    // Default Icon
     return Icons.category_rounded;
   }
 
@@ -84,21 +81,21 @@ class CategoryIconHelper {
     if (name.contains('bill')) return const Color(0xFF6A6A6A);
 
     if (name.contains('entertain')) {
-      return const Color(0xFF6A66A3); // soft indigo
+      return const Color(0xFF6A66A3);
     }
 
-    if (name.contains('health')) return const Color(0xFF5F8A75); // calm green
+    if (name.contains('health')) return const Color(0xFF5F8A75);
 
-    if (name.contains('salary')) return const Color(0xFF4F8F8B); // teal lembut
+    if (name.contains('salary')) return const Color(0xFF4F8F8B);
 
-    if (name.contains('bonus')) return const Color(0xFF8A6A5A); // clay brown
+    if (name.contains('bonus')) return const Color(0xFF8A6A5A);
 
     if (name.contains('gift')) {
-      return const Color(0xFF8A5F78); // muted pink-purple
+      return const Color(0xFF8A5F78);
     }
 
     if (name.contains('freelance')) {
-      return const Color(0xFF6F8F5F); // olive soft
+      return const Color(0xFF6F8F5F);
     }
 
     return AppColors.primary;

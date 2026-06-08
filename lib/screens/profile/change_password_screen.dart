@@ -78,7 +78,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 onPressed: auth.isLoading
                     ? null
                     : () async {
-                        // Validasi Lokal: Cek password baru sama dengan konfirmasi
                         if (_newPassController.text !=
                             _confirmPassController.text) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +90,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           return;
                         }
 
-                        // Panggil API Change Password
                         bool success = await auth.changePassword(
                           _oldPassController.text,
                           _newPassController.text,

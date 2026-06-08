@@ -14,10 +14,8 @@ class TransactionScreen extends StatefulWidget {
 }
 
 class _TransactionScreenState extends State<TransactionScreen> {
-  // Filter Tanggal Custom
   DateTimeRange? _selectedDateRange;
 
-  // Function untuk memilih range tanggal
   void _pickDateRange(BuildContext context, HomeProvider provider) async {
     final DateTime now = DateTime.now();
     final DateTimeRange? picked = await showDateRangePicker(
@@ -46,9 +44,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
       setState(() {
         _selectedDateRange = picked;
       });
-      // Kita perlu custom filter di UI level atau update provider untuk support custom range
-      // SEMENTARA: Kita filter manual list yang didapat dari provider di widget build
-      // karena provider saat ini hanya support filterDays (int) atau selectedMonth (DateTime)
     }
   }
 
@@ -58,10 +53,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       builder: (context, provider, child) {
         List<dynamic> transactions = provider.filteredTransactions;
 
-        // LOGIC FILTER TANGGAL MANUAL (SEARCH)
         if (_selectedDateRange != null) {
           transactions = transactions.where((tx) {
-            // Normalisasi jam agar inklusif
             DateTime txDate = tx.date;
             DateTime start = _selectedDateRange!.start;
             DateTime end = _selectedDateRange!.end
@@ -93,7 +86,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
           body: Column(
             children: [
-              // --- SEARCH / FILTER BAR ---
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.symmetric(
@@ -102,7 +94,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 ),
                 child: Row(
                   children: [
-                    // Search Box (Trigger Date Picker)
                     Expanded(
                       child: InkWell(
                         onTap: () => _pickDateRange(context, provider),
@@ -139,7 +130,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                                 InkWell(
                                   onTap: () {
                                     setState(() {
-                                      _selectedDateRange = null; // Reset filter
+                                      _selectedDateRange = null;
                                     });
                                   },
                                   child: const Icon(
@@ -161,13 +152,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     ),
                     const SizedBox(width: 12),
 
-                    // Quick Filter Dropdown (Pengganti All Time & Chips)
-                    // Menggunakan logic provider filterDays
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 2,
-                      ), // Adjust vertical padding for alignment
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -189,7 +178,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           onChanged: (int? newValue) {
                             if (newValue != null) {
                               provider.setFilterDays(newValue);
-                              // Reset custom date range jika quick filter dipilih agar tidak bentrok
+
                               setState(() {
                                 _selectedDateRange = null;
                               });
@@ -215,7 +204,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 ),
               ),
 
-              // --- LIST TRANSAKSI ---
               Expanded(
                 child: provider.isLoading
                     ? const Center(child: CircularProgressIndicator())

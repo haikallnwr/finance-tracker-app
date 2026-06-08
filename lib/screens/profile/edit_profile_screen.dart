@@ -19,7 +19,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Isi field dengan data saat ini
+
     final auth = Provider.of<AuthProvider>(context, listen: false);
     _usernameController.text = auth.username ?? '';
     _emailController.text = auth.email ?? '';
@@ -72,7 +72,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onPressed: auth.isLoading
                     ? null
                     : () async {
-                        // Panggil fungsi update di provider
                         bool success = await auth.updateProfile(
                           _usernameController.text,
                           _emailController.text,
@@ -87,9 +86,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               backgroundColor: Colors.green,
                             ),
                           );
-                          Navigator.pop(
-                            context,
-                          ); // Kembali ke halaman sebelumnya
+                          Navigator.pop(context);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

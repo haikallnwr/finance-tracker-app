@@ -7,10 +7,10 @@ import 'package:intl/intl.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/home_provider.dart';
-// Import Halaman Detail Baru
+
 import '../detail/expense_detail_screen.dart';
 import '../detail/trend_detail_screen.dart';
-import '../transaction/transaction_screen.dart'; // Import Halaman Transaksi
+import '../transaction/transaction_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Helper Ikon
   IconData _getAccountIcon(String accountName) {
     final name = accountName.toLowerCase();
     if (name.contains("cash")) {
@@ -62,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  // --- LOGIC TAMBAH AKUN (TETAP DI SINI UNTUK BUTTON + DI KARTU SALDO) ---
   void _showAddAccountDialog(BuildContext context) {
     final nameController = TextEditingController();
     final balanceController = TextEditingController();
@@ -131,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- NAVIGATION KE DETAIL ---
   void _navigateToExpenseDetail(BuildContext context) {
     Navigator.push(
       context,
@@ -146,7 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- NAVIGATION KE TRANSAKSI (SHOW MORE) ---
   void _navigateToShowMoreTransactions(BuildContext context) {
     Navigator.push(
       context,
@@ -180,7 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               _buildBalanceCard(context, provider),
                               const SizedBox(height: 20),
 
-                              // Filter Section (Updated Style)
                               _buildFilterSection(provider),
                               const SizedBox(height: 20),
 
@@ -193,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              // Grafik Pie (Informatif + Tombol Detail)
+
                               _buildPieChartSection(context, provider),
 
                               const SizedBox(height: 24),
@@ -207,12 +202,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              // Grafik Trend (Informatif + Tombol Detail)
+
                               _buildLineChart(context, provider),
 
                               const SizedBox(height: 24),
 
-                              // --- RECENT TRANSACTIONS HEADER with SHOW MORE ---
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -226,7 +220,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
 
-                                  // TOMBOL SHOW MORE
                                   TextButton(
                                     onPressed: () =>
                                         _navigateToShowMoreTransactions(
@@ -256,9 +249,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- WIDGETS ---
-
-  // WIDGET LINE CHART
   Widget _buildLineChart(BuildContext context, HomeProvider provider) {
     if (provider.trendSpots.isEmpty ||
         provider.trendSpots.every((spot) => spot.y == 0)) {
@@ -443,8 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () =>
-                  _navigateToTrendDetail(context), // Link ke Full Page
+              onPressed: () => _navigateToTrendDetail(context),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 backgroundColor: AppColors.accent,
@@ -467,7 +456,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // WIDGET PIE CHART
   Widget _buildPieChartSection(BuildContext context, HomeProvider provider) {
     if (provider.chartData.isEmpty) {
       return Container(
@@ -561,8 +549,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () =>
-                  _navigateToExpenseDetail(context), // Link ke Full Page
+              onPressed: () => _navigateToExpenseDetail(context),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 backgroundColor: AppColors.accent,
@@ -585,15 +572,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- FILTER SECTION (UPDATED) ---
   Widget _buildFilterSection(HomeProvider provider) {
-    // List opsi jangka panjang (Long Term) untuk dropdown
     final List<int> longTermOptions = [90, 180, 365];
 
-    // Cek apakah filter saat ini adalah salah satu opsi jangka panjang
     bool isLongTermSelected = longTermOptions.contains(provider.filterDays);
 
-    // Label untuk dropdown saat ini
     String getLabel(int days) {
       if (days == 90) return "3 Months";
       if (days == 180) return "6 Months";
@@ -615,7 +598,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _filterChip("30 Days", 30, provider),
           const SizedBox(width: 10),
 
-          // DROPDOWN FILTER
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
@@ -647,7 +629,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 dropdownColor: Colors.white,
                 style: const TextStyle(color: Colors.black),
 
-                // Builder untuk Tampilan Tombol saat TERTUTUP -> PUTIH jika aktif
                 selectedItemBuilder: (BuildContext context) {
                   return longTermOptions.map<Widget>((int value) {
                     return Center(
@@ -734,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(
                 CategoryIconHelper.getIcon(tx.categoryName),
                 color: Colors.white,
-                size: 20, // Konsisten size 20
+                size: 20,
               ),
             ),
             title: Row(
@@ -761,7 +742,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
-                // Menampilkan Deskripsi jika ada
+
                 if (tx.description.isNotEmpty)
                   Text(
                     tx.description,
@@ -770,7 +751,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 const SizedBox(height: 4),
-                // Row untuk Tanggal dan Akun
+
                 Row(
                   children: [
                     Icon(
