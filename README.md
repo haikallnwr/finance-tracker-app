@@ -14,6 +14,7 @@ This project follows a monorepo architecture, combining both the client applicat
 The backend API is designed following enterprise best practices, utilizing the **Controller-Service-Repository** pattern to ensure scalability, maintainability, and clean code separation.
 
 ### Security Features
+
 - **Helmet**: Secures HTTP headers against common vulnerabilities.
 - **Express Rate Limit**: Protects against brute-force and DDoS attacks.
 - **Mongo Sanitize**: Prevents NoSQL injection attacks.
@@ -21,6 +22,7 @@ The backend API is designed following enterprise best practices, utilizing the *
 - **Global Error Handling**: Centralized error management using custom `AppError` classes and `express-async-handler`.
 
 ### Technical Stack (Backend)
+
 - Node.js & Express.js
 - MongoDB & Mongoose
 - JSON Web Token (JWT) for Authentication
@@ -31,17 +33,20 @@ The backend API is designed following enterprise best practices, utilizing the *
 ### Backend (API) Setup
 
 1. Navigate to the API directory:
+
    ```bash
    cd api
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Environment Variables:
    Create a `.env` file in the `/api` directory using the provided `.env.example` as a template. You must provide your MongoDB connection string and a secret key for JWT.
+
    ```env
    MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/dbname
    PORT=3000
@@ -60,6 +65,7 @@ The backend API is designed following enterprise best practices, utilizing the *
 2. Navigate to the root directory of the project.
 
 3. Install dependencies:
+
    ```bash
    flutter pub get
    ```
@@ -71,14 +77,11 @@ The backend API is designed following enterprise best practices, utilizing the *
 
 ## Postman Documentation
 
-A complete Postman collection is included in the `.github` directory: `.github/postman_collection.json`. 
+You can find the Postman collection in the **[.github/postman_collection.json](.github/postman_collection.json)**.
 
 To use it:
+
 1. Open Postman.
 2. Click "Import" and select the `.github/postman_collection.json` file.
 3. Configure the `baseUrl` variable (e.g., `http://localhost:3000`).
 4. After logging in, copy your JWT token and place it in the Collection's `token` variable to access protected endpoints.
-
-## License
-
-This project is licensed under the MIT License.
